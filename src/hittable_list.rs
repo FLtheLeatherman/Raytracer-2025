@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 pub struct HittableList {
-    pub objects: Vec<Box<dyn Hittable>>
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -20,7 +20,12 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, r_tmin: f64, r_tmax: f64, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
+        let mut temp_rec = HitRecord::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            0.0,
+            false,
+        );
         let mut hit_anything = false;
         let mut closest_so_far = r_tmax;
         for object in &self.objects {

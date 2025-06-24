@@ -46,25 +46,30 @@
 // }
 
 mod color;
-mod ray;
-mod vec3;
 mod hittable;
-mod sphere;
 mod hittable_list;
+mod ray;
+mod sphere;
 mod utility;
+mod vec3;
 
-use color::write_color;
 use color::Color;
+use color::write_color;
+use hittable::{HitRecord, Hittable};
+use hittable_list::HittableList;
 use image::{ImageBuffer, RgbImage};
 use ray::Ray;
-use vec3::Vec3;
-use hittable::{HitRecord, Hittable};
-use utility::INFINITY;
-use hittable_list::HittableList;
 use sphere::Sphere;
+use utility::INFINITY;
+use vec3::Vec3;
 
 fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
-    let mut rec: HitRecord = HitRecord::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
+    let mut rec: HitRecord = HitRecord::new(
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        0.0,
+        false,
+    );
     if world.hit(r, 0.0, INFINITY, &mut rec) {
         return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
     }
@@ -105,5 +110,5 @@ fn main() {
         }
     }
     let path = std::path::Path::new("output/book1/image1.png");
-    img.save(path).expect("FUCK");
+    img.save(path);
 }
