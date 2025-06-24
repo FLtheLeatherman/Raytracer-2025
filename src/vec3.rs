@@ -1,6 +1,6 @@
-use std::ops::{Neg, Add, Sub, Mul, Div};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
-#[derive(Debug)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -21,10 +21,18 @@ impl Vec3 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
     pub fn cross(&self, rhs: &Vec3) -> Vec3 {
-        Vec3::new(self.y * rhs.z - self.z * rhs.y, self.z * rhs.x - self.x * rhs.z, self.x * rhs.y - self.y * rhs.x)
+        Vec3::new(
+            self.y * rhs.z - self.z * rhs.y,
+            self.z * rhs.x - self.x * rhs.z,
+            self.x * rhs.y - self.y * rhs.x,
+        )
     }
     pub fn unit(&self) -> Vec3 {
-        Vec3::new(self.x / self.length(), self.y / self.length(), self.z / self.length())
+        Vec3::new(
+            self.x / self.length(),
+            self.y / self.length(),
+            self.z / self.length(),
+        )
     }
 }
 
