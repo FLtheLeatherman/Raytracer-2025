@@ -39,7 +39,7 @@ fn main() {
     }
     let mut world: HittableList = HittableList::new();
     world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
-    // world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+    world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
     let focal_length = 1.0;
     let viewport_height = 2.0;
     let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
@@ -62,7 +62,7 @@ fn main() {
             write_color(i, j, &pixel_color, &mut img);
         }
     }
-    let path = std::path::Path::new("output/book1/image4.png");
+    let path = std::path::Path::new("output/book1/image5.png");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     img.save(path).expect("Cannot save the image to the file");
