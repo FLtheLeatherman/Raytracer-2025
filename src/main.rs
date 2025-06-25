@@ -24,7 +24,8 @@ fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
         false,
     );
     if world.hit(r, 0.0, INFINITY, &mut rec) {
-        return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
+        return Color::new(1.0, 0.0, 0.0);
+        // return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
     }
     let unit_direction: Vec3 = r.direction.unit();
     let a = 0.5 * (unit_direction.y + 1.0);
@@ -62,7 +63,7 @@ fn main() {
             write_color(i, j, &pixel_color, &mut img);
         }
     }
-    let path = std::path::Path::new("output/book1/image1.png");
+    let path = std::path::Path::new("output/book1/image2.png");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
     img.save(path).expect("Cannot save the image to the file");
