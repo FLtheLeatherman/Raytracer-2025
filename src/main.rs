@@ -31,16 +31,15 @@ fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
     Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
 }
 fn main() {
-    // let aspect_ratio = 16.0 / 9.0;
-    let aspect_ratio = 1.0;
+    let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let mut image_height = (image_width as f64 / aspect_ratio) as u32;
     if image_height < 1 {
         image_height = 1;
     }
     let mut world: HittableList = HittableList::new();
-    world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
+    // world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
+    // world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
     let focal_length = 1.0;
     let viewport_height = 2.0;
     let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
@@ -59,11 +58,7 @@ fn main() {
                 pixel100_loc + pixel_delta_u * (i as f64) + pixel_delta_v * (j as f64);
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
-            // let pixel_color = ray_color(&r, &world);
-            let r = i as f64 / (image_width - 1) as f64;
-            let g = j as f64 / (image_height - 1) as f64;
-            let b = 0.0;
-            let pixel_color = Color::new(r, g, b);
+            let pixel_color = ray_color(&r, &world);
             write_color(i, j, &pixel_color, &mut img);
         }
     }
