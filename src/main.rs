@@ -68,5 +68,7 @@ fn main() {
         }
     }
     let path = std::path::Path::new("output/book1/image1.png");
-    img.save(path).expect("Output Image could not be saved");
+    let prefix = path.parent().unwrap();
+    std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+    img.save(path).expect("Cannot save the image to the file");
 }
