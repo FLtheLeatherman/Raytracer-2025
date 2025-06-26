@@ -4,7 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::utility::{INFINITY, random_double};
+use crate::utility::{INFINITY, degrees_to_radians, random_double};
 use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -21,6 +21,7 @@ pub struct Camera {
     samples_per_pixel: u32,
     pixel_sample_scale: f64,
     max_depth: i32,
+    vfov: f64,
 }
 
 impl Camera {
@@ -29,6 +30,7 @@ impl Camera {
         image_width: u32,
         samples_per_pixel: u32,
         max_depth: i32,
+        vfov: f64,
     ) -> Camera {
         Camera {
             aspect_ratio,
@@ -41,6 +43,7 @@ impl Camera {
             samples_per_pixel,
             pixel_sample_scale: 1.0 / samples_per_pixel as f64,
             max_depth,
+            vfov,
         }
     }
     pub fn initialize(&mut self) {
@@ -50,7 +53,9 @@ impl Camera {
         }
         self.center = Vec3::new(0.0, 0.0, 0.0);
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = degrees_to_radians(self.vfov);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = (self.image_width as f64 / self.image_height as f64) * viewport_height;
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
