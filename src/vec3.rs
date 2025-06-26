@@ -62,6 +62,14 @@ impl Vec3 {
             -on_unit_sphere
         }
     }
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        f64::abs(self.x) < s && f64::abs(self.y) < s && f64::abs(self.z) < s
+    }
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        let res = (*v) - (*n) * 2.0 * Self::dot(v, n);
+        res
+    }
 }
 
 impl Neg for Vec3 {

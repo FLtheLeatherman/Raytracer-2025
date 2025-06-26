@@ -78,15 +78,14 @@ impl Camera {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
-        let mut rec: HitRecord = HitRecord::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 0.0),
-            0.0,
-            false,
-        );
+        let mut rec: HitRecord = HitRecord::default();
         if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
-            let direction = rec.normal + Vec3::random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world, rate) * rate;
+            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+            let mut attenuation = Color::default();
+            if (rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered)) {
+                return attenuation * Self::ray_color(&scattered, depth - 1, world, rate);
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
         let unit_direction: Vec3 = r.direction.unit();
         let a = 0.5 * (unit_direction.y + 1.0);
@@ -102,8 +101,7 @@ impl Camera {
         };
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let tmp = i / 80;
-                let rate = tmp as f64 * 0.2 + 0.1;
+                let rate = 0.5;
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for sample in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);

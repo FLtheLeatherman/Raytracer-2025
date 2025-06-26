@@ -2,6 +2,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use std::sync::Arc;
 
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
@@ -21,12 +22,7 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 0.0),
-            0.0,
-            false,
-        );
+        let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
         for object in &self.objects {
