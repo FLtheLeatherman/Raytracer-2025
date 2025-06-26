@@ -22,6 +22,12 @@ pub struct Camera {
     pixel_sample_scale: f64,
     max_depth: i32,
     vfov: f64,
+    lookfrom: Vec3,
+    lookat: Vec3,
+    vup: Vec3,
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
 }
 
 impl Camera {
@@ -31,19 +37,28 @@ impl Camera {
         samples_per_pixel: u32,
         max_depth: i32,
         vfov: f64,
+        lookfrom: Vec3,
+        lookat: Vec3,
+        vup: Vec3,
     ) -> Camera {
         Camera {
             aspect_ratio,
             image_width,
             image_height: 0,
-            center: Vec3::new(0.0, 0.0, 0.0),
-            pixel00_loc: Vec3::new(0.0, 0.0, 0.0),
-            pixel_delta_u: Vec3::new(0.0, 0.0, 0.0),
-            pixel_delta_v: Vec3::new(0.0, 0.0, 0.0),
+            center: Vec3::default(),
+            pixel00_loc: Vec3::default(),
+            pixel_delta_u: Vec3::default(),
+            pixel_delta_v: Vec3::default(),
             samples_per_pixel,
             pixel_sample_scale: 1.0 / samples_per_pixel as f64,
             max_depth,
             vfov,
+            lookfrom,
+            lookat,
+            vup,
+            u: Vec3::default(),
+            v: Vec3::default(),
+            w: Vec3::default(),
         }
     }
     pub fn initialize(&mut self) {
@@ -51,19 +66,21 @@ impl Camera {
         if self.image_height < 1 {
             self.image_height = 1;
         }
-        self.center = Vec3::new(0.0, 0.0, 0.0);
-        let focal_length = 1.0;
+        self.center = self.lookfrom;
+        let focal_length = (self.lookfrom - self.lookat).length();
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * focal_length;
         let viewport_width = (self.image_width as f64 / self.image_height as f64) * viewport_height;
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        self.w = (self.lookfrom - self.lookat).unit();
+        self.u = self.vup.cross(&self.w).unit();
+        self.v = self.w.cross(&self.u);
+        let viewport_u = self.u * viewport_width;
+        let viewport_v = self.v * (-viewport_height);
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
-        let camera_center = Vec3::new(0.0, 0.0, 0.0);
         let viewport_upper_left =
-            camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.w * focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
         self.pixel_sample_scale = 1.0 / self.samples_per_pixel as f64;
     }
@@ -85,7 +102,7 @@ impl Camera {
         }
         let mut rec: HitRecord = HitRecord::default();
         if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
-            let mut scattered = Ray::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+            let mut scattered = Ray::new(Vec3::default(), Vec3::default());
             let mut attenuation = Color::default();
             if (rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered)) {
                 return attenuation * Self::ray_color(&scattered, depth - 1, world, rate);

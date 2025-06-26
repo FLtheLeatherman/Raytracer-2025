@@ -24,20 +24,40 @@ use vec3::Vec3;
 
 fn main() {
     let mut world: HittableList = HittableList::new();
-    let R = (PI / 4.0).cos();
-    let material_left = Lambertian::new(Color::new(0.0, 0.0, 1.0));
-    let material_right = Lambertian::new(Color::new(1.0, 0.0, 0.0));
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     world.add(Box::new(Sphere::new(
-        Vec3::new(-R, -0.0, -1.0),
-        R,
+        Vec3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    world.add(Box::new(Sphere::new(
+        Vec3::new(0.0, 0.0, -1.2),
+        0.5,
+        material_center,
+    )));
+    let material_left = Dielectric::new(1.50);
+    world.add(Box::new(Sphere::new(
+        Vec3::new(-1.0, 0.0, -1.0),
+        0.5,
         material_left,
     )));
+    let material_bubble = Dielectric::new(1.00 / 1.50);
     world.add(Box::new(Sphere::new(
-        Vec3::new(R, -0.0, -1.0),
-        R,
+        Vec3::new(-1.0, 0.0, -1.0),
+        0.4,
+        material_bubble,
+    )));
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+    world.add(Box::new(Sphere::new(
+        Vec3::new(1.0, 0.0, -1.0),
+        0.5,
         material_right,
     )));
-    let mut cam: Camera = Camera::new(16.0 / 9.0, 400, 100, 50, 90.0);
-    let path = std::path::Path::new("output/book1/image19.png");
+    let lookfrom = Vec3::new(-2.0, 2.0, 1.0);
+    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(16.0 / 9.0, 400, 100, 50, 90.0, lookfrom, lookat, vup);
+    let path = std::path::Path::new("output/book1/image20.png");
     cam.render(&world, path);
 }
