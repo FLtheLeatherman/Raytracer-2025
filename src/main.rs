@@ -22,5 +22,6 @@ fn main() {
     world.add(Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)));
     world.add(Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)));
     let mut cam: Camera = Camera::new(16.0 / 9.0, 400, 100);
-    cam.render(&world);
+    let path = std::path::Path::new("output/book1/image7.png");
+    cam.render(&world, path);
 }

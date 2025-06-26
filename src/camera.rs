@@ -7,6 +7,7 @@ use crate::sphere::Sphere;
 use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
+use indicatif::ProgressBar;
 use lazy_static::initialize;
 
 pub struct Camera {
@@ -74,15 +75,21 @@ impl Camera {
             false,
         );
         if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
-            return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
+            let direction = Vec3::random_on_hemisphere(&rec.normal);
+            return Self::ray_color(&Ray::new(rec.p, direction), world) * 0.5;
         }
         let unit_direction: Vec3 = r.direction.unit();
         let a = 0.5 * (unit_direction.y + 1.0);
         Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
     }
-    pub fn render(&mut self, world: &dyn Hittable) {
+    pub fn render(&mut self, world: &dyn Hittable, path: &std::path::Path) {
         self.initialize();
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
+        let progress = if option_env!("CI").unwrap_or_default() == "true" {
+            ProgressBar::hidden()
+        } else {
+            ProgressBar::new((self.image_height * self.image_width) as u64)
+        };
         for j in 0..self.image_height {
             for i in 0..self.image_width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
@@ -92,8 +99,9 @@ impl Camera {
                 }
                 write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
             }
+            progress.inc(1);
         }
-        let path = std::path::Path::new("output/book1/image6.png");
+        progress.finish();
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
         img.save(path).expect("Cannot save the image to the file");

@@ -1,3 +1,4 @@
+use crate::utility::{random_double, random_double_range};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -33,6 +34,33 @@ impl Vec3 {
             self.y / self.length(),
             self.z / self.length(),
         )
+    }
+    pub fn random() -> Vec3 {
+        Vec3::new(random_double(), random_double(), random_double())
+    }
+    pub fn random_range(min: f64, max: f64) -> Vec3 {
+        Vec3::new(
+            random_double_range(min, max),
+            random_double_range(min, max),
+            random_double_range(min, max),
+        )
+    }
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p = Self::random_range(-1.0, 1.0);
+            let lensq = p.squared_length();
+            if lensq <= 1.0 {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Self::random_unit_vector();
+        if Self::dot(&on_unit_sphere, normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 }
 
