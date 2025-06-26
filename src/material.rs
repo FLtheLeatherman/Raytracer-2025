@@ -1,8 +1,10 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::utility::random_double;
 use crate::vec3::Vec3;
 use dyn_clone::DynClone;
+use rand::random;
 use std::ops::Neg;
 
 pub trait Material: DynClone {
@@ -78,6 +80,11 @@ impl Dielectric {
     pub fn new(refraction_index: f64) -> Dielectric {
         Dielectric { refraction_index }
     }
+    fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+        let mut r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
 }
 impl Material for Dielectric {
     fn scatter(
@@ -99,7 +106,7 @@ impl Material for Dielectric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0;
         let mut direction = Vec3::default();
-        if cannot_refract {
+        if cannot_refract || Self::reflectance(cos_theta, ri) > random_double() {
             direction = Vec3::reflect(&unit_direction, &rec.normal);
         } else {
             direction = Vec3::refract(&unit_direction, &rec.normal, ri);
