@@ -25,8 +25,8 @@ fn main() {
     let mut world: HittableList = HittableList::new();
     let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, -100.5, -1.0),
         100.0,
@@ -48,6 +48,6 @@ fn main() {
         material_right,
     )));
     let mut cam: Camera = Camera::new(16.0 / 9.0, 400, 100, 50);
-    let path = std::path::Path::new("output/book1/image13.png");
+    let path = std::path::Path::new("output/book1/image14.png");
     cam.render(&world, path);
 }

@@ -46,10 +46,11 @@ impl Material for Lambertian {
 #[derive(Clone)]
 pub struct Metal {
     albedo: Color,
+    fuzz: f64
 }
 impl Metal {
-    pub fn new(albedo: Color) -> Metal {
-        Metal { albedo }
+    pub fn new(albedo: Color, fuzz: f64) -> Metal {
+        Metal { albedo, fuzz }
     }
 }
 impl Material for Metal {
@@ -60,9 +61,10 @@ impl Material for Metal {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let reflected = Vec3::reflect(&r_in.direction, &rec.normal);
+        let mut reflected = Vec3::reflect(&r_in.direction, &rec.normal);
+        reflected = reflected.unit() + (Vec3::random_unit_vector() * self.fuzz); 
         *scattered = Ray::new(rec.p, reflected);
         *attenuation = self.albedo;
-        true
+        scattered.direction.dot(&rec.normal) > 0.0
     }
 }
