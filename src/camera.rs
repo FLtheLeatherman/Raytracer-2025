@@ -20,7 +20,7 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: u32,
     pixel_sample_scale: f64,
-    max_depth: u32,
+    max_depth: i32,
 }
 
 impl Camera {
@@ -28,7 +28,7 @@ impl Camera {
         aspect_ratio: f64,
         image_width: u32,
         samples_per_pixel: u32,
-        max_depth: u32,
+        max_depth: i32,
     ) -> Camera {
         Camera {
             aspect_ratio,
@@ -74,7 +74,7 @@ impl Camera {
         let ray_direction = pixel_sample - ray_origin;
         Ray::new(ray_origin, ray_direction)
     }
-    fn ray_color(r: &Ray, depth: u32, world: &dyn Hittable) -> Color {
+    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
