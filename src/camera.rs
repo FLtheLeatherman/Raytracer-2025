@@ -74,7 +74,7 @@ impl Camera {
         let ray_direction = pixel_sample - ray_origin;
         Ray::new(ray_origin, ray_direction)
     }
-    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable, rate: f64) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -86,7 +86,7 @@ impl Camera {
         );
         if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
             let direction = rec.normal + Vec3::random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
+            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world, rate) * rate;
         }
         let unit_direction: Vec3 = r.direction.unit();
         let a = 0.5 * (unit_direction.y + 1.0);
@@ -102,10 +102,12 @@ impl Camera {
         };
         for j in 0..self.image_height {
             for i in 0..self.image_width {
+                let tmp = i / 80;
+                let rate = tmp as f64 * 0.2 + 0.1;
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for sample in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color = pixel_color + Self::ray_color(&r, self.max_depth, world);
+                    pixel_color = pixel_color + Self::ray_color(&r, self.max_depth, world, rate);
                 }
                 write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
                 progress.inc(1);
