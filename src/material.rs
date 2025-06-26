@@ -3,6 +3,7 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use dyn_clone::DynClone;
+use std::ops::Neg;
 
 pub trait Material: DynClone {
     fn scatter(
@@ -94,8 +95,16 @@ impl Material for Dielectric {
             ri = self.refraction_index
         }
         let unit_direction = r_in.direction.unit();
-        let refracted = Vec3::refract(&unit_direction, &rec.normal, ri);
-        *scattered = Ray::new(rec.p, refracted);
+        let cos_theta = unit_direction.neg().dot(&rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = ri * sin_theta > 1.0;
+        let mut direction = Vec3::default();
+        if cannot_refract {
+            direction = Vec3::reflect(&unit_direction, &rec.normal);
+        } else {
+            direction = Vec3::refract(&unit_direction, &rec.normal, ri);
+        }
+        *scattered = Ray::new(rec.p, direction);
         true
     }
 }
