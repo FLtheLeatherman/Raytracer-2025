@@ -70,12 +70,23 @@ impl Vec3 {
         let res = (*v) - (*n) * 2.0 * Self::dot(v, n);
         res
     }
-
     pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
         let cos_theta = (1.0 as f64).min(Self::dot(&uv.neg(), n));
         let r_out_perp = (*uv + (*n) * cos_theta) * etai_over_etat;
         let r_out_parallel = (*n) * -f64::abs(1.0 - r_out_perp.squared_length()).sqrt();
         r_out_perp + r_out_parallel
+    }
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let p = Vec3::new(
+                random_double_range(-1.0, 1.0),
+                random_double_range(-1.0, 1.0),
+                0.0,
+            );
+            if p.squared_length() < 1.0 {
+                return p;
+            }
+        }
     }
 }
 

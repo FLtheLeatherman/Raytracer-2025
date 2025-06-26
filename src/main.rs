@@ -57,7 +57,18 @@ fn main() {
     let lookfrom = Vec3::new(-2.0, 2.0, 1.0);
     let lookat = Vec3::new(0.0, 0.0, -1.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let mut cam: Camera = Camera::new(16.0 / 9.0, 400, 100, 50, 20.0, lookfrom, lookat, vup);
-    let path = std::path::Path::new("output/book1/image21.png");
+    let mut cam: Camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        lookfrom,
+        lookat,
+        vup,
+        10.0,
+        3.4,
+    );
+    let path = std::path::Path::new("output/book1/image22.png");
     cam.render(&world, path);
 }
