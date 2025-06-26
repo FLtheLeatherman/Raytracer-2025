@@ -20,10 +20,16 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: u32,
     pixel_sample_scale: f64,
+    max_depth: u32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Camera {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        samples_per_pixel: u32,
+        max_depth: u32,
+    ) -> Camera {
         Camera {
             aspect_ratio,
             image_width,
@@ -34,6 +40,7 @@ impl Camera {
             pixel_delta_v: Vec3::new(0.0, 0.0, 0.0),
             samples_per_pixel,
             pixel_sample_scale: 1.0 / samples_per_pixel as f64,
+            max_depth,
         }
     }
     pub fn initialize(&mut self) {
@@ -67,7 +74,10 @@ impl Camera {
         let ray_direction = pixel_sample - ray_origin;
         Ray::new(ray_origin, ray_direction)
     }
-    fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(r: &Ray, depth: u32, world: &dyn Hittable) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let mut rec: HitRecord = HitRecord::new(
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.0, 0.0, 0.0),
@@ -76,7 +86,7 @@ impl Camera {
         );
         if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
             let direction = Vec3::random_on_hemisphere(&rec.normal);
-            return Self::ray_color(&Ray::new(rec.p, direction), world) * 0.5;
+            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
         let unit_direction: Vec3 = r.direction.unit();
         let a = 0.5 * (unit_direction.y + 1.0);
@@ -95,11 +105,11 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for sample in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color = pixel_color + Self::ray_color(&r, world);
+                    pixel_color = pixel_color + Self::ray_color(&r, self.max_depth, world);
                 }
                 write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
+                progress.inc(1);
             }
-            progress.inc(1);
         }
         progress.finish();
         let prefix = path.parent().unwrap();
