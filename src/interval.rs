@@ -1,16 +1,25 @@
 use crate::utility;
 
-#[derive(Default, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
+}
+
+impl Default for Interval {
+    fn default() -> Self {
+        Self {
+            min: utility::INFINITY,
+            max: -utility::INFINITY,
+        }
+    }
 }
 
 impl Interval {
     pub fn new(min: f64, max: f64) -> Interval {
         Interval { min, max }
     }
-    pub fn new_interval(a: Interval, b: Interval) -> Interval {
+    pub fn new_interval(a: &Interval, b: &Interval) -> Interval {
         Interval {
             min: a.min.min(b.min),
             max: a.max.max(b.max),

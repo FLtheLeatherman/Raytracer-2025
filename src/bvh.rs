@@ -1,4 +1,4 @@
-use crate::aabb::{AABB, AABB_EMPTY};
+use crate::aabb::AABB;
 use crate::color::Color;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
@@ -35,12 +35,8 @@ impl BvhNode {
     fn box_z_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
         Self::box_compare(a, b, 2)
     }
-    pub fn build(src_objects: &mut Vec<Rc<dyn Hittable>>, s: usize, e: usize) -> Self {
-        let mut bbox = *AABB_EMPTY;
-        for object_index in (s..e) {
-            bbox = AABB::new_aabb(&bbox, &(src_objects[object_index].bounding_box()));
-        }
-        let axis = bbox.longest_axis();
+    pub fn new(src_objects: &mut Vec<Rc<dyn Hittable>>, s: usize, e: usize) -> Self {
+        let axis = random_int_range(0, 2);
         let comparator = match axis {
             0 => Self::box_x_compare,
             1 => Self::box_y_compare,
@@ -77,28 +73,29 @@ impl BvhNode {
         } else {
             (*objects)[s..e].sort_by(comparator);
             let mid = s + object_span / 2;
-            let left = Rc::new(Self::build(objects, s, mid));
-            let right = Rc::new(Self::build(objects, mid, e));
+            let left = Rc::new(Self::new(objects, s, mid));
+            let right = Rc::new(Self::new(objects, mid, e));
             let bbox = AABB::new_aabb(&left.bounding_box(), &right.bounding_box());
             Self { left, right, bbox }
         }
     }
-    pub fn new(list: &mut HittableList) -> Self {
+    pub fn new_list(list: &mut HittableList) -> Self {
         let len = list.objects.len();
-        Self::build(&mut list.objects, 0, len)
+        Self::new(&mut list.objects, 0, len)
     }
 }
 impl Hittable for BvhNode {
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        if !self.bbox.hit(r, ray_t) {
+        let mut ray_t = ray_t.clone();
+        if !self.bbox.hit(r, &ray_t) {
             return false;
         }
-        let hit_left = self.left.hit(r, ray_t, rec);
+        let hit_left = self.left.hit(r, &ray_t, rec);
         let mut hit_right = false;
         if hit_left {
             hit_right = self.right.hit(r, &Interval::new(ray_t.min, rec.t), rec);
         } else {
-            hit_right = self.right.hit(r, ray_t, rec);
+            hit_right = self.right.hit(r, &ray_t, rec);
         }
         hit_left || hit_right
     }

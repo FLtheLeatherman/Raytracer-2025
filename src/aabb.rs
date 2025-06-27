@@ -10,37 +10,30 @@ pub struct AABB {
 }
 
 impl AABB {
-    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        AABB { x, y, z }
-    }
-    fn get_interval(x: f64, y: f64) -> Interval {
-        if x < y {
-            Interval::new(x, y)
-        } else {
-            Interval::new(y, x)
-        }
+    pub fn new(x: &Interval, y: &Interval, z: &Interval) -> Self {
+        AABB { x: (*x).clone(), y: (*y).clone(), z: (*z).clone() }
     }
     pub fn new_points(a: &Vec3, b: &Vec3) -> Self {
-        AABB {
-            x: Self::get_interval(a.x, b.x),
-            y: Self::get_interval(a.y, b.y),
-            z: Self::get_interval(a.z, b.z),
+        Self {
+            x: Interval::new(a.x.min(b.x), a.x.max(b.x)),
+            y: Interval::new(a.y.min(b.y), a.y.max(b.y)),
+            z: Interval::new(a.z.min(b.z), a.z.max(b.z)),
         }
     }
     pub fn new_aabb(box0: &AABB, box1: &AABB) -> Self {
         AABB {
-            x: Interval::new_interval(box0.x, box1.x),
-            y: Interval::new_interval(box0.y, box1.y),
-            z: Interval::new_interval(box0.z, box1.z),
+            x: Interval::new_interval(&box0.x, &box1.x),
+            y: Interval::new_interval(&box0.y, &box1.y),
+            z: Interval::new_interval(&box0.z, &box1.z),
         }
     }
-    pub fn axis_interval(&self, n: u32) -> Interval {
+    pub fn axis_interval(&self, n: u32) -> &Interval {
         if n == 1 {
-            self.y
+            &self.y
         } else if n == 2 {
-            self.z
+            &self.z
         } else {
-            self.x
+            &self.x
         }
     }
     pub fn hit(&self, r: &Ray, ray_t: &Interval) -> bool {
@@ -49,21 +42,21 @@ impl AABB {
         let mut tmp_ray = ray_t.clone();
         for axis in 0..3 {
             let ax = self.axis_interval(axis);
-            let adinv = 2.0 / ray_dir.axis(axis);
+            let adinv = 1.0 / ray_dir.axis(axis);
             let t0 = (ax.min - ray_orig.axis(axis)) * adinv;
             let t1 = (ax.max - ray_orig.axis(axis)) * adinv;
             if t0 < t1 {
-                if t0 > ray_t.min {
+                if t0 > tmp_ray.min {
                     tmp_ray.min = t0;
                 }
-                if t1 < ray_t.max {
+                if t1 < tmp_ray.max {
                     tmp_ray.max = t1;
                 }
             } else {
-                if t1 > ray_t.min {
+                if t1 > tmp_ray.min {
                     tmp_ray.min = t1;
                 }
-                if t0 < ray_t.max {
+                if t0 < tmp_ray.max {
                     tmp_ray.max = t0;
                 }
             }
@@ -84,7 +77,7 @@ impl AABB {
     }
 }
 lazy_static! {
-    pub static ref AABB_EMPTY: AABB = AABB::new(*INTERVAL_EMPTY, *INTERVAL_EMPTY, *INTERVAL_EMPTY);
+    pub static ref AABB_EMPTY: AABB = AABB::new(&INTERVAL_EMPTY, &INTERVAL_EMPTY, &INTERVAL_EMPTY);
     pub static ref AABB_UNIVERSE: AABB =
-        AABB::new(*INTERVAL_UNIVERSE, *INTERVAL_UNIVERSE, *INTERVAL_UNIVERSE);
+        AABB::new(&INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE);
 }

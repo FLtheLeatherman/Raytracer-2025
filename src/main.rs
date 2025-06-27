@@ -85,7 +85,7 @@ fn main() {
         1.0,
         material3,
     )));
-    let world = bvh::BvhNode::new(&mut world);
+    let world = bvh::BvhNode::new_list(&mut world);
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
