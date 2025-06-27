@@ -83,7 +83,7 @@ impl BvhNode {
 }
 impl Hittable for BvhNode {
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        let mut ray_t = ray_t.clone();
+        let ray_t = ray_t.clone();
         if !self.bbox.hit(r, &ray_t) {
             return false;
         }

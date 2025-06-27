@@ -11,12 +11,14 @@ mod interval;
 mod material;
 mod ray;
 mod sphere;
+mod texture;
 mod utility;
 mod vec3;
 
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::material::{Dielectric, Lambertian, Metal};
+use crate::texture::CheckerTexture;
 use crate::utility::{random_double, random_double_range};
 use hittable::Hittable;
 use hittable_list::HittableList;
@@ -30,11 +32,12 @@ use vec3::Vec3;
 
 fn main() {
     let mut world: HittableList = HittableList::new();
-    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let checker =
+        CheckerTexture::new_color(0.32, &Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Lambertian::new_tex(Rc::new(checker)),
     )));
     for a in -11..11 {
         for b in -11..11 {

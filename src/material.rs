@@ -1,11 +1,13 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::texture::{SolidColor, Texture};
 use crate::utility::random_double;
 use crate::vec3::Vec3;
 use dyn_clone::DynClone;
 use rand::random;
 use std::ops::Neg;
+use std::rc::Rc;
 
 pub trait Material: DynClone {
     fn scatter(
@@ -21,11 +23,16 @@ dyn_clone::clone_trait_object!(Material);
 
 #[derive(Clone)]
 pub struct Lambertian {
-    albedo: Color,
+    tex: Rc<dyn Texture>,
 }
 impl Lambertian {
     pub fn new(albedo: Color) -> Lambertian {
-        Lambertian { albedo }
+        Lambertian {
+            tex: Rc::new(SolidColor::new_color(&albedo)),
+        }
+    }
+    pub fn new_tex(tex: Rc<dyn Texture>) -> Lambertian {
+        Lambertian { tex }
     }
 }
 impl Material for Lambertian {
@@ -41,7 +48,7 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
         *scattered = Ray::new_time(rec.p, scatter_direction, r_in.tm);
-        *attenuation = self.albedo;
+        *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         true
     }
 }
