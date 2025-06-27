@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable;
@@ -21,6 +23,7 @@ use hittable_list::HittableList;
 use material::Material;
 use rand::random;
 use sphere::Sphere;
+use std::rc::Rc;
 use std::sync::Arc;
 use utility::PI;
 use vec3::Vec3;
@@ -28,7 +31,7 @@ use vec3::Vec3;
 fn main() {
     let mut world: HittableList = HittableList::new();
     let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -46,7 +49,7 @@ fn main() {
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Lambertian::new(albedo);
                     let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
-                    world.add(Box::new(Sphere::new_dyn(
+                    world.add(Rc::new(Sphere::new_dyn(
                         center,
                         center2,
                         0.2,
@@ -56,32 +59,33 @@ fn main() {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
                     let sphere_material = Metal::new(albedo, fuzz);
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
                     let sphere_material = Dielectric::new(1.5);
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
                 }
             }
         }
     }
     let material1 = Dielectric::new(1.5);
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
     let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
     let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
+    let world = bvh::BvhNode::new(&mut world);
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -97,6 +101,6 @@ fn main() {
         0.6,
         10.0,
     );
-    let path = std::path::Path::new("output/book2/image1.png");
+    let path = std::path::Path::new("output/book2/image2.png");
     cam.render(&world, path);
 }

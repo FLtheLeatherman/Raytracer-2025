@@ -1,3 +1,4 @@
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
@@ -9,14 +10,17 @@ pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
     pub mat: Arc<dyn Material>,
+    pub bbox: AABB,
 }
 
 impl Sphere {
     pub fn new(static_center: Vec3, radius: f64, mat: impl Material + 'static) -> Sphere {
+        let rvec = Vec3::new(radius, radius, radius);
         Sphere {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius,
             mat: Arc::new(mat),
+            bbox: AABB::new_points(&(static_center - rvec), &(static_center + rvec)),
         }
     }
     pub fn new_dyn(
@@ -25,10 +29,15 @@ impl Sphere {
         radius: f64,
         mat: impl Material + 'static,
     ) -> Sphere {
+        let _center = Ray::new(center1, center2 - center1);
+        let rvec = Vec3::new(radius, radius, radius);
+        let box1 = AABB::new_points(&(_center.at(0.0) - rvec), &(_center.at(0.0) + rvec));
+        let box2 = AABB::new_points(&(_center.at(1.0) - rvec), &(_center.at(1.0) + rvec));
         Sphere {
-            center: Ray::new(center1, center2 - center1),
+            center: _center,
             radius,
             mat: Arc::new(mat),
+            bbox: AABB::new_aabb(&box1, &box2),
         }
     }
 }
@@ -58,5 +67,9 @@ impl Hittable for Sphere {
         rec.set_face_normal(r, outward_normal);
         rec.mat = self.mat.clone();
         true
+    }
+
+    fn bounding_box(&self) -> AABB {
+        self.bbox
     }
 }

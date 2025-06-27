@@ -18,6 +18,15 @@ impl Vec3 {
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()
     }
+    pub fn axis(&self, n: u32) -> f64 {
+        if n == 0 {
+            self.x
+        } else if n == 1 {
+            self.y
+        } else {
+            self.z
+        }
+    }
     pub fn dot(&self, rhs: &Vec3) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
