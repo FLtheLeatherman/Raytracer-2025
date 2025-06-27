@@ -9,6 +9,7 @@ use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use lazy_static::initialize;
+use rand::random;
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -115,7 +116,8 @@ impl Camera {
             ray_origin = self.defocus_disk_sample();
         }
         let ray_direction = pixel_sample - ray_origin;
-        Ray::new(ray_origin, ray_direction)
+        let ray_time = random_double();
+        Ray::new_time(ray_origin, ray_direction, ray_time)
     }
     fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable, rate: f64) -> Color {
         if depth <= 0 {

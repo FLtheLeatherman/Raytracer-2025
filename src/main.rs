@@ -45,7 +45,13 @@ fn main() {
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Lambertian::new(albedo);
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    world.add(Box::new(Sphere::new_dyn(
+                        center,
+                        center2,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
@@ -81,8 +87,8 @@ fn main() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let mut cam: Camera = Camera::new(
         16.0 / 9.0,
-        1200,
-        500,
+        400,
+        100,
         50,
         20.0,
         lookfrom,
@@ -91,6 +97,6 @@ fn main() {
         0.6,
         10.0,
     );
-    let path = std::path::Path::new("output/book1/image23.png");
+    let path = std::path::Path::new("output/book2/image1.png");
     cam.render(&world, path);
 }
