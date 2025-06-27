@@ -1,4 +1,4 @@
-use crate::aabb::AABB;
+use crate::aabb::{AABB, AABB_EMPTY};
 use crate::color::Color;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
@@ -36,7 +36,11 @@ impl BvhNode {
         Self::box_compare(a, b, 2)
     }
     pub fn new(src_objects: &mut Vec<Rc<dyn Hittable>>, s: usize, e: usize) -> Self {
-        let axis = random_int_range(0, 2);
+        let mut bbox = AABB_EMPTY.clone();
+        for object_index in (s..e) {
+            bbox = AABB::new_aabb(&bbox, &(src_objects[object_index].bounding_box()));
+        }
+        let axis = bbox.longest_axis();
         let comparator = match axis {
             0 => Self::box_x_compare,
             1 => Self::box_y_compare,
@@ -48,26 +52,20 @@ impl BvhNode {
             BvhNode {
                 left: objects[s].clone(),
                 right: objects[s].clone(),
-                bbox: objects[s].bounding_box().clone(),
+                bbox,
             }
         } else if object_span == 2 {
             if comparator(&objects[s], &objects[s + 1]) == Ordering::Less {
                 BvhNode {
                     left: objects[s].clone(),
                     right: objects[s + 1].clone(),
-                    bbox: AABB::new_aabb(
-                        &objects[s].bounding_box(),
-                        &objects[s + 1].bounding_box(),
-                    ),
+                    bbox,
                 }
             } else {
                 BvhNode {
                     left: objects[s + 1].clone(),
                     right: objects[s].clone(),
-                    bbox: AABB::new_aabb(
-                        &objects[s + 1].bounding_box(),
-                        &objects[s].bounding_box(),
-                    ),
+                    bbox,
                 }
             }
         } else {
@@ -75,7 +73,6 @@ impl BvhNode {
             let mid = s + object_span / 2;
             let left = Rc::new(Self::new(objects, s, mid));
             let right = Rc::new(Self::new(objects, mid, e));
-            let bbox = AABB::new_aabb(&left.bounding_box(), &right.bounding_box());
             Self { left, right, bbox }
         }
     }

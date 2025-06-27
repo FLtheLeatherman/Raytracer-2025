@@ -11,7 +11,11 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(x: &Interval, y: &Interval, z: &Interval) -> Self {
-        AABB { x: (*x).clone(), y: (*y).clone(), z: (*z).clone() }
+        AABB {
+            x: (*x).clone(),
+            y: (*y).clone(),
+            z: (*z).clone(),
+        }
     }
     pub fn new_points(a: &Vec3, b: &Vec3) -> Self {
         Self {
