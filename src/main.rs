@@ -18,7 +18,7 @@ mod vec3;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::material::{Dielectric, Lambertian, Metal};
-use crate::texture::CheckerTexture;
+use crate::texture::{CheckerTexture, SolidColor};
 use crate::utility::{random_double, random_double_range};
 use hittable::Hittable;
 use hittable_list::HittableList;
@@ -30,14 +30,13 @@ use std::sync::Arc;
 use utility::PI;
 use vec3::Vec3;
 
-fn main() {
+fn bouncing_spheres() {
     let mut world: HittableList = HittableList::new();
-    let checker =
-        CheckerTexture::new_color(0.32, &Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9));
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Lambertian::new_tex(Rc::new(checker)),
+        ground_material,
     )));
     for a in -11..11 {
         for b in -11..11 {
@@ -104,6 +103,50 @@ fn main() {
         0.6,
         10.0,
     );
-    let path = std::path::Path::new("output/book2/image2.png");
+    let path = std::path::Path::new("output/test.png");
     cam.render(&world, path);
+}
+
+fn checkered_spheres() {
+    let mut world = HittableList::new();
+    let checker =
+        CheckerTexture::new_color(0.32, &Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9));
+    let checker_copy =
+        CheckerTexture::new_color(0.32, &Color::new(0.2, 0.3, 0.1), &Color::new(0.9, 0.9, 0.9));
+    world.add(Rc::new(Sphere::new(
+        Vec3::new(0.0, -10.0, 0.0),
+        10.0,
+        Lambertian::new_tex(Rc::new(checker)),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Vec3::new(0.0, 10.0, 0.0),
+        10.0,
+        Lambertian::new_tex(Rc::new(checker_copy)),
+    )));
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+    );
+    let path = std::path::Path::new("output/book2/image3.png");
+    cam.render(&world, path);
+}
+
+fn main() {
+    let a = 2;
+    match a {
+        1 => bouncing_spheres(),
+        2 => checkered_spheres(),
+        _ => return,
+    }
 }
