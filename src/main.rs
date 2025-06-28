@@ -10,6 +10,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod ray;
+mod rtw_stb_image;
 mod sphere;
 mod texture;
 mod utility;
@@ -18,7 +19,7 @@ mod vec3;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::material::{Dielectric, Lambertian, Metal};
-use crate::texture::{CheckerTexture, SolidColor};
+use crate::texture::{CheckerTexture, ImageTexture, SolidColor};
 use crate::utility::{random_double, random_double_range};
 use hittable::Hittable;
 use hittable_list::HittableList;
@@ -103,7 +104,7 @@ fn bouncing_spheres() {
         0.6,
         10.0,
     );
-    let path = std::path::Path::new("output/test.png");
+    let path = std::path::Path::new("output/book2/image1.png");
     cam.render(&world, path);
 }
 
@@ -141,12 +142,37 @@ fn checkered_spheres() {
     let path = std::path::Path::new("output/book2/image3.png");
     cam.render(&world, path);
 }
+fn earth() {
+    let mut world = HittableList::new();
+    let earth_texture = ImageTexture::new("earthmap.jpg");
+    let earth_suface = Lambertian::new_tex(Rc::new(earth_texture));
+    let globe = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, earth_suface);
+    world.add(Rc::new(globe));
+    let lookfrom = Vec3::new(0.0, 0.0, 12.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+    );
+    let path = std::path::Path::new("output/book2/image5.png");
+    cam.render(&world, path);
+}
 
 fn main() {
-    let a = 2;
+    let a = 3;
     match a {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
+        3 => earth(),
         _ => return,
     }
 }

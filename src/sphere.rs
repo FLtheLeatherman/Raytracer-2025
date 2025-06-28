@@ -3,6 +3,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::utility::PI;
 use crate::vec3::Vec3;
 use std::sync::Arc;
 
@@ -40,6 +41,11 @@ impl Sphere {
             bbox: AABB::new_aabb(&box1, &box2),
         }
     }
+    pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + PI;
+        (phi / (2.0 * PI), theta / PI)
+    }
 }
 
 impl Hittable for Sphere {
@@ -65,6 +71,7 @@ impl Hittable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - current_center) / self.radius;
         rec.set_face_normal(r, outward_normal);
+        (rec.u, rec.v) = Self::get_sphere_uv(&outward_normal);
         rec.mat = self.mat.clone();
         true
     }

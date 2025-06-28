@@ -1,4 +1,6 @@
 use crate::color::Color;
+use crate::interval::Interval;
+use crate::rtw_stb_image::RtwImage;
 use crate::vec3::Vec3;
 use std::rc::Rc;
 
@@ -55,5 +57,35 @@ impl Texture for CheckerTexture {
         } else {
             self.odd.value(u, v, p)
         }
+    }
+}
+
+pub struct ImageTexture {
+    image: RtwImage,
+}
+impl ImageTexture {
+    pub fn new(filename: &str) -> Self {
+        Self {
+            image: RtwImage::new(filename),
+        }
+    }
+}
+impl Texture for ImageTexture {
+    fn value(&self, mut u: f64, mut v: f64, p: &Vec3) -> Color {
+        if self.image.height() <= 0 {
+            print!("huh?\n");
+            return Color::new(0.0, 1.0, 1.0);
+        }
+        u = Interval::new(0.0, 1.0).clamp(u);
+        v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+        let i = (u * self.image.width() as f64) as usize;
+        let j = (v * self.image.height() as f64) as usize;
+        let pixel = self.image.pixel_data(i, j);
+        let color_scale = 1.0 / 255.0;
+        Color::new(
+            (color_scale * pixel[0] as f64) * (color_scale * pixel[0] as f64),
+            (color_scale * pixel[1] as f64) * (color_scale * pixel[1] as f64),
+            (color_scale * pixel[2] as f64) * (color_scale * pixel[2] as f64),
+        )
     }
 }
