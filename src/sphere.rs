@@ -16,21 +16,16 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(static_center: Vec3, radius: f64, mat: impl Material + 'static) -> Sphere {
+    pub fn new(static_center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
         let rvec = Vec3::new(radius, radius, radius);
         Sphere {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius,
-            mat: Rc::new(mat),
+            mat: mat.clone(),
             bbox: AABB::new_points(&(static_center - rvec), &(static_center + rvec)),
         }
     }
-    pub fn new_dyn(
-        center1: Vec3,
-        center2: Vec3,
-        radius: f64,
-        mat: impl Material + 'static,
-    ) -> Sphere {
+    pub fn new_dyn(center1: Vec3, center2: Vec3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
         let _center = Ray::new(center1, center2 - center1);
         let rvec = Vec3::new(radius, radius, radius);
         let box1 = AABB::new_points(&(_center.at(0.0) - rvec), &(_center.at(0.0) + rvec));
@@ -38,7 +33,7 @@ impl Sphere {
         Sphere {
             center: _center,
             radius,
-            mat: Rc::new(mat),
+            mat: mat.clone(),
             bbox: AABB::new_aabb(&box1, &box2),
         }
     }

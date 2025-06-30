@@ -21,7 +21,7 @@ mod vec3;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use crate::quad::Quad;
+use crate::quad::{Quad, make_box};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor};
 use crate::utility::{random_double, random_double_range};
 use hittable::Hittable;
@@ -40,7 +40,7 @@ fn bouncing_spheres() {
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Rc::new(ground_material),
     )));
     for a in -11..11 {
         for b in -11..11 {
@@ -59,16 +59,16 @@ fn bouncing_spheres() {
                         center,
                         center2,
                         0.2,
-                        sphere_material,
+                        Rc::new(sphere_material),
                     )));
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
                     let sphere_material = Metal::new(albedo, fuzz);
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new(center, 0.2, Rc::new(sphere_material))));
                 } else {
                     let sphere_material = Dielectric::new(1.5);
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new(center, 0.2, Rc::new(sphere_material))));
                 }
             }
         }
@@ -77,19 +77,19 @@ fn bouncing_spheres() {
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 1.0, 0.0),
         1.0,
-        material1,
+        Rc::new(material1),
     )));
     let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.add(Rc::new(Sphere::new(
         Vec3::new(-4.0, 1.0, 0.0),
         1.0,
-        material2,
+        Rc::new(material2),
     )));
     let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
     world.add(Rc::new(Sphere::new(
         Vec3::new(4.0, 1.0, 0.0),
         1.0,
-        material3,
+        Rc::new(material3),
     )));
     let world = bvh::BvhNode::new_list(&mut world);
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -121,12 +121,12 @@ fn checkered_spheres() {
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -10.0, 0.0),
         10.0,
-        Lambertian::new_tex(Rc::new(checker)),
+        Rc::new(Lambertian::new_tex(Rc::new(checker))),
     )));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 10.0, 0.0),
         10.0,
-        Lambertian::new_tex(Rc::new(checker_copy)),
+        Rc::new(Lambertian::new_tex(Rc::new(checker_copy))),
     )));
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -151,7 +151,7 @@ fn earth() {
     let mut world = HittableList::new();
     let earth_texture = ImageTexture::new("earthmap.jpg");
     let earth_suface = Lambertian::new_tex(Rc::new(earth_texture));
-    let globe = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, earth_suface);
+    let globe = Sphere::new(Vec3::new(0.0, 0.0, 0.0), 2.0, Rc::new(earth_suface));
     world.add(Rc::new(globe));
     let lookfrom = Vec3::new(0.0, 0.0, 12.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -179,12 +179,12 @@ fn perlin_spheres() {
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Lambertian::new_tex(Rc::new(pertext)),
+        Rc::new(Lambertian::new_tex(Rc::new(pertext))),
     )));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 2.0, 0.0),
         2.0,
-        Lambertian::new_tex(Rc::new(pertext_clone)),
+        Rc::new(Lambertian::new_tex(Rc::new(pertext_clone))),
     )));
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -216,31 +216,31 @@ fn quads() {
         &Vec3::new(-3.0, -2.0, 5.0),
         &Vec3::new(0.0, 0.0, -4.0),
         &Vec3::new(0.0, 4.0, 0.0),
-        left_red,
+        Rc::new(left_red),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(-2.0, -2.0, 0.0),
         &Vec3::new(4.0, 0.0, 0.0),
         &Vec3::new(0.0, 4.0, 0.0),
-        back_green,
+        Rc::new(back_green),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(3.0, -2.0, 1.0),
         &Vec3::new(0.0, 0.0, 4.0),
         &Vec3::new(0.0, 4.0, 0.0),
-        right_blue,
+        Rc::new(right_blue),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(-2.0, 3.0, 1.0),
         &Vec3::new(4.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, 4.0),
-        upper_orange,
+        Rc::new(upper_orange),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(-2.0, -3.0, 5.0),
         &Vec3::new(4.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, -4.0),
-        lower_teal,
+        Rc::new(lower_teal),
     )));
     let lookfrom = Vec3::new(0.0, 0.0, 9.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
@@ -268,25 +268,25 @@ fn simple_lights() {
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Lambertian::new_tex(Rc::new(pertext)),
+        Rc::new(Lambertian::new_tex(Rc::new(pertext))),
     )));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 2.0, 0.0),
         2.0,
-        Lambertian::new_tex(Rc::new(pertext_clone)),
+        Rc::new(Lambertian::new_tex(Rc::new(pertext_clone))),
     )));
     let difflight = DiffuseLight::new(&Color::new(4.0, 4.0, 4.0));
     let difflight_clone = DiffuseLight::new(&Color::new(4.0, 4.0, 4.0));
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, 7.0, 0.0),
         2.0,
-        difflight,
+        Rc::new(difflight),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(3.0, 1.0, -2.0),
         &Vec3::new(2.0, 0.0, 0.0),
         &Vec3::new(0.0, 2.0, 0.0),
-        difflight_clone,
+        Rc::new(difflight_clone),
     )));
     let lookfrom = Vec3::new(26.0, 3.0, 6.0);
     let lookat = Vec3::new(0.0, 2.0, 0.0);
@@ -317,40 +317,53 @@ fn cornell_box() {
         &Vec3::new(555.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
         &Vec3::new(0.0, 0.0, 555.0),
-        green,
+        Rc::new(green),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
         &Vec3::new(0.0, 0.0, 555.0),
-        red,
+        Rc::new(red),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(343.0, 554.0, 332.0),
         &Vec3::new(-130.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, -105.0),
-        light,
+        Rc::new(light),
     )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(555.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, 555.0),
-        white,
+        Rc::new(white),
     )));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     world.add(Rc::new(Quad::new(
         &Vec3::new(555.0, 555.0, 555.0),
         &Vec3::new(-555.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, -555.0),
-        white,
+        Rc::new(white),
     )));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     world.add(Rc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 555.0),
         &Vec3::new(555.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
-        white,
+        Rc::new(white),
     )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(make_box(
+        &Vec3::new(130.0, 0.0, 65.0),
+        &Vec3::new(295.0, 165.0, 230.0),
+        Rc::new(white),
+    ));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(make_box(
+        &Vec3::new(265.0, 0.0, 295.0),
+        &Vec3::new(430.0, 330.0, 460.0),
+        Rc::new(white),
+    ));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     let lookfrom = Vec3::new(278.0, 278.0, -800.0);
     let lookat = Vec3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -367,7 +380,7 @@ fn cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book2/image19.png");
+    let path = std::path::Path::new("output/book2/image20.png");
     cam.render(&world, path);
 }
 fn main() {
