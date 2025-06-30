@@ -20,7 +20,7 @@ mod vec3;
 
 use crate::camera::Camera;
 use crate::color::Color;
-use crate::material::{Dielectric, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::quad::Quad;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor};
 use crate::utility::{random_double, random_double_range};
@@ -106,6 +106,7 @@ fn bouncing_spheres() {
         vup,
         0.6,
         10.0,
+        Color::new(0.70, 0.80, 1.00),
     );
     let path = std::path::Path::new("output/book2/image1.png");
     cam.render(&world, path);
@@ -141,6 +142,7 @@ fn checkered_spheres() {
         vup,
         0.0,
         10.0,
+        Color::new(0.70, 0.80, 1.00),
     );
     let path = std::path::Path::new("output/book2/image3.png");
     cam.render(&world, path);
@@ -165,6 +167,7 @@ fn earth() {
         vup,
         0.0,
         10.0,
+        Color::new(0.70, 0.80, 1.00),
     );
     let path = std::path::Path::new("output/book2/image5.png");
     cam.render(&world, path);
@@ -197,6 +200,7 @@ fn perlin_spheres() {
         vup,
         0.0,
         10.0,
+        Color::new(0.70, 0.80, 1.00),
     );
     let path = std::path::Path::new("output/book2/image15.png");
     cam.render(&world, path);
@@ -241,18 +245,71 @@ fn quads() {
     let lookfrom = Vec3::new(0.0, 0.0, 9.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let mut cam: Camera = Camera::new(1.0, 400, 100, 50, 80.0, lookfrom, lookat, vup, 0.0, 10.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        400,
+        100,
+        50,
+        80.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.70, 0.80, 1.00),
+    );
     let path = std::path::Path::new("output/book2/image16.png");
     cam.render(&world, path);
 }
+fn simple_lights() {
+    let mut world = HittableList::new();
+    let pertext = NoiseTexture::new(4.0);
+    let pertext_clone = NoiseTexture::new(4.0);
+    world.add(Rc::new(Sphere::new(
+        Vec3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Lambertian::new_tex(Rc::new(pertext)),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Vec3::new(0.0, 2.0, 0.0),
+        2.0,
+        Lambertian::new_tex(Rc::new(pertext_clone)),
+    )));
+    let difflight = DiffuseLight::new(&Color::new(4.0, 4.0, 4.0));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(3.0, 1.0, -2.0),
+        &Vec3::new(2.0, 0.0, 0.0),
+        &Vec3::new(0.0, 2.0, 0.0),
+        difflight,
+    )));
+    let lookfrom = Vec3::new(26.0, 3.0, 6.0);
+    let lookat = Vec3::new(0.0, 2.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/book2/image17.png");
+    cam.render(&world, path);
+}
 fn main() {
-    let a = 5;
+    let a = 6;
     match a {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
         5 => quads(),
+        6 => simple_lights(),
         _ => return,
     }
 }

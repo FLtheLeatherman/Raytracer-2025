@@ -17,6 +17,9 @@ pub trait Material: DynClone {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
+    }
 }
 
 dyn_clone::clone_trait_object!(Material);
@@ -120,5 +123,35 @@ impl Material for Dielectric {
         }
         *scattered = Ray::new_time(rec.p, direction, r_in.tm);
         true
+    }
+}
+
+#[derive(Clone)]
+pub struct DiffuseLight {
+    tex: Rc<dyn Texture>,
+}
+impl DiffuseLight {
+    pub fn new(emit: &Color) -> Self {
+        Self {
+            tex: Rc::new(SolidColor::new_color(emit)),
+        }
+    }
+    pub fn new_tex(tex: impl Texture + 'static) -> Self {
+        Self { tex: Rc::new(tex) }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(
+        &self,
+        r_in: &Ray,
+        rec: &HitRecord,
+        attenuation: &mut Color,
+        scattered: &mut Ray,
+    ) -> bool {
+        false
+    }
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
+        self.tex.value(u, v, p)
     }
 }
