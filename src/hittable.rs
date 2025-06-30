@@ -4,6 +4,7 @@ use crate::interval::Interval;
 use crate::material::{Lambertian, Material};
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use std::rc::Rc;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -14,7 +15,7 @@ pub struct HitRecord {
     pub u: f64,
     pub v: f64,
     pub front_face: bool,
-    pub mat: Arc<dyn Material>,
+    pub mat: Rc<dyn Material>,
 }
 
 impl HitRecord {
@@ -34,7 +35,7 @@ impl HitRecord {
             u,
             v,
             front_face,
-            mat: Arc::new(mat),
+            mat: Rc::new(mat),
         }
     }
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
@@ -56,7 +57,7 @@ impl Default for HitRecord {
             u: 0.0,
             v: 0.0,
             front_face: false,
-            mat: Arc::new(Lambertian::new(Color::default())),
+            mat: Rc::new(Lambertian::new(Color::default())),
         }
     }
 }

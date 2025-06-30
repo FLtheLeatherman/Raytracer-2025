@@ -10,6 +10,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod perlin;
+mod quad;
 mod ray;
 mod rtw_stb_image;
 mod sphere;
@@ -20,6 +21,7 @@ mod vec3;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::material::{Dielectric, Lambertian, Metal};
+use crate::quad::Quad;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor};
 use crate::utility::{random_double, random_double_range};
 use hittable::Hittable;
@@ -199,14 +201,58 @@ fn perlin_spheres() {
     let path = std::path::Path::new("output/book2/image15.png");
     cam.render(&world, path);
 }
-
+fn quads() {
+    let mut world = HittableList::new();
+    let left_red = Lambertian::new(Color::new(1.0, 0.2, 0.2));
+    let back_green = Lambertian::new(Color::new(0.2, 1.0, 0.2));
+    let right_blue = Lambertian::new(Color::new(0.2, 0.2, 1.0));
+    let upper_orange = Lambertian::new(Color::new(1.0, 0.5, 0.0));
+    let lower_teal = Lambertian::new(Color::new(0.2, 0.8, 0.8));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(-3.0, -2.0, 5.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(-2.0, -2.0, 0.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(3.0, -2.0, 1.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(-2.0, 3.0, 1.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(-2.0, -3.0, 5.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
+    )));
+    let lookfrom = Vec3::new(0.0, 0.0, 9.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(1.0, 400, 100, 50, 80.0, lookfrom, lookat, vup, 0.0, 10.0);
+    let path = std::path::Path::new("output/book2/image16.png");
+    cam.render(&world, path);
+}
 fn main() {
-    let a = 4;
+    let a = 5;
     match a {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
+        5 => quads(),
         _ => return,
     }
 }

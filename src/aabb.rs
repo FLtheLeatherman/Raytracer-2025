@@ -1,6 +1,7 @@
 use crate::interval::{INTERVAL_EMPTY, INTERVAL_UNIVERSE, Interval};
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use stb_image::image::load_with_depth;
 
 #[derive(Copy, Clone, Default)]
 pub struct AABB {
@@ -10,19 +11,35 @@ pub struct AABB {
 }
 
 impl AABB {
+    fn pad_to_minimums(&mut self) {
+        let delta = 0.0001;
+        if self.x.size() < delta {
+            self.x = self.x.expand(delta);
+        }
+        if self.y.size() < delta {
+            self.y = self.y.expand(delta);
+        }
+        if self.z.size() < delta {
+            self.z = self.z.expand(delta);
+        }
+    }
     pub fn new(x: &Interval, y: &Interval, z: &Interval) -> Self {
-        AABB {
+        let mut _self = AABB {
             x: (*x).clone(),
             y: (*y).clone(),
             z: (*z).clone(),
-        }
+        };
+        _self.pad_to_minimums();
+        _self
     }
     pub fn new_points(a: &Vec3, b: &Vec3) -> Self {
-        Self {
+        let mut _self = Self {
             x: Interval::new(a.x.min(b.x), a.x.max(b.x)),
             y: Interval::new(a.y.min(b.y), a.y.max(b.y)),
             z: Interval::new(a.z.min(b.z), a.z.max(b.z)),
-        }
+        };
+        _self.pad_to_minimums();
+        _self
     }
     pub fn new_aabb(box0: &AABB, box1: &AABB) -> Self {
         AABB {

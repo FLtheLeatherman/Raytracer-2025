@@ -5,12 +5,13 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::utility::PI;
 use crate::vec3::Vec3;
+use std::rc::Rc;
 use std::sync::Arc;
 
 pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
-    pub mat: Arc<dyn Material>,
+    pub mat: Rc<dyn Material>,
     pub bbox: AABB,
 }
 
@@ -20,7 +21,7 @@ impl Sphere {
         Sphere {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius,
-            mat: Arc::new(mat),
+            mat: Rc::new(mat),
             bbox: AABB::new_points(&(static_center - rvec), &(static_center + rvec)),
         }
     }
@@ -37,7 +38,7 @@ impl Sphere {
         Sphere {
             center: _center,
             radius,
-            mat: Arc::new(mat),
+            mat: Rc::new(mat),
             bbox: AABB::new_aabb(&box1, &box2),
         }
     }
