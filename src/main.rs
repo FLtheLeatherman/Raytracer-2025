@@ -307,8 +307,71 @@ fn simple_lights() {
     let path = std::path::Path::new("output/book2/image18.png");
     cam.render(&world, path);
 }
+fn cornell_box() {
+    let mut world = HittableList::new();
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        green,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        red,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        light,
+    )));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        white,
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(555.0, 555.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        white,
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Rc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        white,
+    )));
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        200,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/book2/image19.png");
+    cam.render(&world, path);
+}
 fn main() {
-    let a = 6;
+    let a = 7;
     match a {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
@@ -316,6 +379,7 @@ fn main() {
         4 => perlin_spheres(),
         5 => quads(),
         6 => simple_lights(),
+        7 => cornell_box(),
         _ => return,
     }
 }
