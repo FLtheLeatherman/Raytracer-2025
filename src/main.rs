@@ -20,6 +20,7 @@ mod vec3;
 
 use crate::camera::Camera;
 use crate::color::Color;
+use crate::hittable::{RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::quad::{Quad, make_box};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor};
@@ -352,18 +353,23 @@ fn cornell_box() {
         Rc::new(white),
     )));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
-    world.add(make_box(
-        &Vec3::new(130.0, 0.0, 65.0),
-        &Vec3::new(295.0, 165.0, 230.0),
+    let box1 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 330.0, 165.0),
         Rc::new(white),
-    ));
+    );
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    world.add(box1);
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
-    world.add(make_box(
-        &Vec3::new(265.0, 0.0, 295.0),
-        &Vec3::new(430.0, 330.0, 460.0),
+    let box2 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 165.0, 165.0),
         Rc::new(white),
-    ));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    );
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    world.add(box2);
     let lookfrom = Vec3::new(278.0, 278.0, -800.0);
     let lookat = Vec3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -380,7 +386,7 @@ fn cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book2/image20.png");
+    let path = std::path::Path::new("output/book2/image21.png");
     cam.render(&world, path);
 }
 fn main() {

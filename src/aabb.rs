@@ -2,6 +2,7 @@ use crate::interval::{INTERVAL_EMPTY, INTERVAL_UNIVERSE, Interval};
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use stb_image::image::load_with_depth;
+use std::ops::Add;
 
 #[derive(Copy, Clone, Default)]
 pub struct AABB {
@@ -95,6 +96,18 @@ impl AABB {
         } else {
             2
         }
+    }
+}
+impl Add<Vec3> for AABB {
+    type Output = Self;
+    fn add(self, rhs: Vec3) -> Self::Output {
+        AABB::new(&(self.x + rhs.x), &(self.y + rhs.y), &(self.z + rhs.z))
+    }
+}
+impl Add<AABB> for Vec3 {
+    type Output = AABB;
+    fn add(self, rhs: AABB) -> Self::Output {
+        rhs + self
     }
 }
 lazy_static! {
