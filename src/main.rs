@@ -169,8 +169,8 @@ fn earth() {
 }
 fn perlin_spheres() {
     let mut world = HittableList::new();
-    let pertext = NoiseTexture::new();
-    let pertext_clone = NoiseTexture::new();
+    let pertext = NoiseTexture::new(4.0);
+    let pertext_clone = NoiseTexture::new(4.0);
     world.add(Rc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -196,7 +196,7 @@ fn perlin_spheres() {
         0.0,
         10.0,
     );
-    let path = std::path::Path::new("output/book2/image11.png");
+    let path = std::path::Path::new("output/book2/image12.png");
     cam.render(&world, path);
 }
 
