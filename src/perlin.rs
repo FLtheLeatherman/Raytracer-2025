@@ -80,9 +80,9 @@ impl Perlin {
         accum
     }
     pub fn noise(&self, p: &Vec3) -> f64 {
-        let mut u = p.x - p.x.floor();
-        let mut v = p.y - p.y.floor();
-        let mut w = p.z - p.z.floor();
+        let u = p.x - p.x.floor();
+        let v = p.y - p.y.floor();
+        let w = p.z - p.z.floor();
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
@@ -99,5 +99,16 @@ impl Perlin {
             }
         }
         Self::perlin_interp(c, u, v, w)
+    }
+    pub fn turb(&self, p: &Vec3, depth: i32) -> f64 {
+        let mut accum = 0.0;
+        let mut temp_p = *p;
+        let mut weight = 1.0;
+        for i in 0..depth {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p = temp_p.clone() * 2.0;
+        }
+        accum.abs()
     }
 }
