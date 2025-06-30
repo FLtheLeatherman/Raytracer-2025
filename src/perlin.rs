@@ -7,6 +7,7 @@ pub struct Perlin {
     perm_y: [i32; POINT_COUNT],
     perm_z: [i32; POINT_COUNT],
     randfloat: [f64; POINT_COUNT],
+    randvec: [Vec3; POINT_COUNT],
 }
 impl Perlin {
     fn permute(p: &mut [i32; POINT_COUNT]) {
@@ -34,22 +35,45 @@ impl Perlin {
         Self::perlin_generate_perm(&mut perm_x);
         Self::perlin_generate_perm(&mut perm_y);
         Self::perlin_generate_perm(&mut perm_z);
+        let mut randvec = [Vec3::default(); POINT_COUNT];
+        for i in 0..POINT_COUNT {
+            randvec[i] = Vec3::random_range(-1.0, 1.0).unit();
+        }
         Self {
             perm_x,
             perm_y,
             perm_z,
             randfloat,
+            randvec,
         }
     }
-    fn trilinear_interp(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    // fn trilinear_interp(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    //     let mut accum = 0.0;
+    //     for i in 0..2 {
+    //         for j in 0..2 {
+    //             for k in 0..2 {
+    //                 let _i = i as f64 * u + (1.0 - i as f64) * (1.0 - u);
+    //                 let _j = j as f64 * v + (1.0 - j as f64) * (1.0 - v);
+    //                 let _k = k as f64 * w + (1.0 - k as f64) * (1.0 - w);
+    //                 accum += _i * _j * _k * c[i as usize][j as usize][k as usize];
+    //             }
+    //         }
+    //     }
+    //     accum
+    // }
+    fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
         let mut accum = 0.0;
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let _i = i as f64 * u + (1.0 - i as f64) * (1.0 - u);
-                    let _j = j as f64 * v + (1.0 - j as f64) * (1.0 - v);
-                    let _k = k as f64 * w + (1.0 - k as f64) * (1.0 - w);
-                    accum += _i * _j * _k * c[i as usize][j as usize][k as usize];
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    let _i = i as f64 * uu + (1.0 - i as f64) * (1.0 - uu);
+                    let _j = j as f64 * vv + (1.0 - j as f64) * (1.0 - vv);
+                    let _k = k as f64 * ww + (1.0 - k as f64) * (1.0 - ww);
+                    accum += _i * _j * _k * c[i as usize][j as usize][k as usize].dot(&weight_v);
                 }
             }
         }
@@ -59,17 +83,14 @@ impl Perlin {
         let mut u = p.x - p.x.floor();
         let mut v = p.y - p.y.floor();
         let mut w = p.z - p.z.floor();
-        u = u * u * (3.0 - 2.0 * u);
-        v = v * v * (3.0 - 2.0 * v);
-        w = w * w * (3.0 - 2.0 * w);
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
-        let mut c = [[[0.0; 2]; 2]; 2];
+        let mut c = [[[Vec3::default(); 2]; 2]; 2];
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    c[di as usize][dj as usize][dk as usize] = self.randfloat[(self.perm_x
+                    c[di as usize][dj as usize][dk as usize] = self.randvec[(self.perm_x
                         [((i + di) & 255) as usize]
                         ^ self.perm_y[((j + dj) & 255) as usize]
                         ^ self.perm_z[((k + dk) & 255) as usize])
@@ -77,6 +98,6 @@ impl Perlin {
                 }
             }
         }
-        Self::trilinear_interp(c, u, v, w)
+        Self::perlin_interp(c, u, v, w)
     }
 }
