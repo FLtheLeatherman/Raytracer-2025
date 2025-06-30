@@ -1,5 +1,6 @@
 use crate::color::Color;
 use crate::interval::Interval;
+use crate::perlin::Perlin;
 use crate::rtw_stb_image::RtwImage;
 use crate::vec3::Vec3;
 use std::rc::Rc;
@@ -86,5 +87,21 @@ impl Texture for ImageTexture {
             (color_scale * pixel[1] as f64) * (color_scale * pixel[1] as f64),
             (color_scale * pixel[2] as f64) * (color_scale * pixel[2] as f64),
         )
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+}
+impl NoiseTexture {
+    pub fn new() -> Self {
+        Self {
+            noise: Perlin::new(),
+        }
+    }
+}
+impl Texture for NoiseTexture {
+    fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(p)
     }
 }
