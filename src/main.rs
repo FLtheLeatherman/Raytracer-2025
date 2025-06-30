@@ -276,11 +276,17 @@ fn simple_lights() {
         Lambertian::new_tex(Rc::new(pertext_clone)),
     )));
     let difflight = DiffuseLight::new(&Color::new(4.0, 4.0, 4.0));
+    let difflight_clone = DiffuseLight::new(&Color::new(4.0, 4.0, 4.0));
+    world.add(Rc::new(Sphere::new(
+        Vec3::new(0.0, 7.0, 0.0),
+        2.0,
+        difflight,
+    )));
     world.add(Rc::new(Quad::new(
         &Vec3::new(3.0, 1.0, -2.0),
         &Vec3::new(2.0, 0.0, 0.0),
         &Vec3::new(0.0, 2.0, 0.0),
-        difflight,
+        difflight_clone,
     )));
     let lookfrom = Vec3::new(26.0, 3.0, 6.0);
     let lookat = Vec3::new(0.0, 2.0, 0.0);
@@ -298,7 +304,7 @@ fn simple_lights() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book2/image17.png");
+    let path = std::path::Path::new("output/book2/image18.png");
     cam.render(&world, path);
 }
 fn main() {
