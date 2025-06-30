@@ -196,7 +196,7 @@ fn perlin_spheres() {
         0.0,
         10.0,
     );
-    let path = std::path::Path::new("output/book2/image14.png");
+    let path = std::path::Path::new("output/book2/image15.png");
     cam.render(&world, path);
 }
 
