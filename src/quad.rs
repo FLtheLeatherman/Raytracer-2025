@@ -6,20 +6,20 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use stb_image::image::load_with_depth;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Quad {
     q: Vec3,
     u: Vec3,
     v: Vec3,
     w: Vec3,
-    mat: Rc<dyn Material>,
+    mat: Arc<dyn Material>,
     bbox: AABB,
     normal: Vec3,
     d: f64,
 }
 impl Quad {
-    pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
         let bbox_diagonal1 = AABB::new_points(q, &(*q + *u + *v));
         let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
         let n = u.cross(v);
@@ -72,48 +72,48 @@ impl Hittable for Quad {
         self.bbox
     }
 }
-pub fn make_box(a: &Vec3, b: &Vec3, mat: Rc<dyn Material>) -> Rc<HittableList> {
+pub fn make_box(a: &Vec3, b: &Vec3, mat: Arc<dyn Material>) -> Arc<HittableList> {
     let mut sides = HittableList::new();
     let min = Vec3::new(a.x.min(b.x), a.y.min(b.y), a.z.min(b.z));
     let max = Vec3::new(a.x.max(b.x), a.y.max(b.y), a.z.max(b.z));
     let dx = Vec3::new(max.x - min.x, 0.0, 0.0);
     let dy = Vec3::new(0.0, max.y - min.y, 0.0);
     let dz = Vec3::new(0.0, 0.0, max.z - min.z);
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(min.x, min.y, max.z),
         &dx,
         &dy,
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(max.x, min.y, max.z),
         &(-dz),
         &dy,
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(max.x, min.y, min.z),
         &(-dx),
         &dy,
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(min.x, min.y, min.z),
         &dz,
         &dy,
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(min.x, max.y, max.z),
         &dx,
         &(-dz),
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         &Vec3::new(min.x, min.y, min.z),
         &dx,
         &dz,
-        Rc::clone(&mat),
+        Arc::clone(&mat),
     )));
-    Rc::new(sides)
+    Arc::new(sides)
 }

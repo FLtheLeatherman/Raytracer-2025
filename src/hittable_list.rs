@@ -3,11 +3,10 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
-use std::rc::Rc;
 use std::sync::Arc;
 
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
     bbox: AABB,
 }
 
@@ -18,7 +17,7 @@ impl HittableList {
             bbox: AABB::default(),
         }
     }
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.bbox = AABB::new_aabb(&self.bbox, &object.bounding_box());
         self.objects.push(object);
     }

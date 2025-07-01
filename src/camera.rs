@@ -10,6 +10,7 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use lazy_static::initialize;
 use rand::random;
+use rayon::prelude::*;
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -139,27 +140,27 @@ impl Camera {
         let color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world, rate);
         color_from_emission + color_from_scatter
     }
-    pub fn render(&mut self, world: &dyn Hittable, path: &std::path::Path) {
-        self.initialize();
+    pub fn render(&self, world: &(dyn Hittable + Sync), path: &std::path::Path) {
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
-        let progress = if option_env!("CI").unwrap_or_default() == "true" {
-            ProgressBar::hidden()
-        } else {
-            ProgressBar::new((self.image_height * self.image_width) as u64)
-        };
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
-                let rate = 0.5;
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for sample in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
-                }
-                write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
-                progress.inc(1);
-            }
+        let pixels: Vec<(u32, u32, Color)> = (0..self.image_height)
+            .into_par_iter()
+            .flat_map(|j| {
+                (0..self.image_width).into_par_iter().map(move |i| {
+                    let rate = 0.5;
+                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                    for _sample in 0..self.samples_per_pixel {
+                        // 这里 self 会被自动地、不可变地借用 (&self)
+                        // world 会被自动地、不可变地借用 (&world)
+                        let r = self.get_ray(i, j);
+                        pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                    }
+                    (i, j, pixel_color)
+                })
+            })
+            .collect();
+        for (i, j, pixel_color) in pixels {
+            write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
         }
-        progress.finish();
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
         img.save(path).expect("Cannot save the image to the file");

@@ -10,32 +10,31 @@ use crate::utility::random_int_range;
 use crate::vec3::Vec3;
 use rand::Rng;
 use std::cmp::Ordering;
-use std::rc::Rc;
 use std::sync::Arc;
 
 pub struct BvhNode {
-    left: Rc<dyn Hittable>,
-    right: Rc<dyn Hittable>,
+    left: Arc<dyn Hittable>,
+    right: Arc<dyn Hittable>,
     bbox: AABB,
 }
 impl BvhNode {
-    fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis_index: u32) -> Ordering {
+    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis_index: u32) -> Ordering {
         a.bounding_box()
             .axis_interval(axis_index)
             .min
             .partial_cmp(&b.bounding_box().axis_interval(axis_index).min)
             .unwrap()
     }
-    fn box_x_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+    fn box_x_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
         Self::box_compare(a, b, 0)
     }
-    fn box_y_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+    fn box_y_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
         Self::box_compare(a, b, 1)
     }
-    fn box_z_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>) -> Ordering {
+    fn box_z_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
         Self::box_compare(a, b, 2)
     }
-    pub fn new(src_objects: &mut Vec<Rc<dyn Hittable>>, s: usize, e: usize) -> Self {
+    pub fn new(src_objects: &mut Vec<Arc<dyn Hittable>>, s: usize, e: usize) -> Self {
         let mut bbox = AABB_EMPTY.clone();
         for object_index in (s..e) {
             bbox = AABB::new_aabb(&bbox, &(src_objects[object_index].bounding_box()));
@@ -71,8 +70,8 @@ impl BvhNode {
         } else {
             (*objects)[s..e].sort_by(comparator);
             let mid = s + object_span / 2;
-            let left = Rc::new(Self::new(objects, s, mid));
-            let right = Rc::new(Self::new(objects, mid, e));
+            let left = Arc::new(Self::new(objects, s, mid));
+            let right = Arc::new(Self::new(objects, mid, e));
             Self { left, right, bbox }
         }
     }

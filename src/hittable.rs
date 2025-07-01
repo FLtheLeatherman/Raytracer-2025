@@ -6,7 +6,6 @@ use crate::ray::Ray;
 use crate::utility::{INFINITY, degrees_to_radians};
 use crate::vec3::Vec3;
 use console::StyledObject;
-use std::rc::Rc;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -17,7 +16,7 @@ pub struct HitRecord {
     pub u: f64,
     pub v: f64,
     pub front_face: bool,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
 }
 
 impl HitRecord {
@@ -28,7 +27,7 @@ impl HitRecord {
         u: f64,
         v: f64,
         front_face: bool,
-        mat: impl Material + 'static,
+        mat: Arc<dyn Material>,
     ) -> HitRecord {
         HitRecord {
             p,
@@ -37,7 +36,7 @@ impl HitRecord {
             u,
             v,
             front_face,
-            mat: Rc::new(mat),
+            mat: mat.clone(),
         }
     }
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
@@ -59,23 +58,23 @@ impl Default for HitRecord {
             u: 0.0,
             v: 0.0,
             front_face: false,
-            mat: Rc::new(Lambertian::new(Color::default())),
+            mat: Arc::new(Lambertian::new(Color::default())),
         }
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
     fn bounding_box(&self) -> AABB;
 }
 
 pub struct Translate {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable>,
     offset: Vec3,
     bbox: AABB,
 }
 impl Translate {
-    pub fn new(object: Rc<dyn Hittable>, offset: Vec3) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, offset: Vec3) -> Self {
         Self {
             object: object.clone(),
             offset,
@@ -97,13 +96,13 @@ impl Hittable for Translate {
     }
 }
 pub struct RotateY {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable>,
     sin_theta: f64,
     cos_theta: f64,
     bbox: AABB,
 }
 impl RotateY {
-    pub fn new(object: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
