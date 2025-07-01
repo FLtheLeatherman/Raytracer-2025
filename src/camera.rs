@@ -35,6 +35,8 @@ pub struct Camera {
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
     background: Color,
+    sqrt_spp: u32,
+    recip_sqrt_spp: f64,
 }
 
 impl Camera {
@@ -74,6 +76,8 @@ impl Camera {
             defocus_disk_u: Vec3::default(),
             defocus_disk_v: Vec3::default(),
             background,
+            sqrt_spp: 0,
+            recip_sqrt_spp: 0.0,
         }
     }
     pub fn initialize(&mut self) {
@@ -81,7 +85,9 @@ impl Camera {
         if self.image_height < 1 {
             self.image_height = 1;
         }
-        self.pixel_sample_scale = 1.0 / self.samples_per_pixel as f64;
+        self.sqrt_spp = self.samples_per_pixel.isqrt();
+        self.pixel_sample_scale = 1.0 / (self.sqrt_spp * self.sqrt_spp) as f64;
+        self.recip_sqrt_spp = 1.0 / self.sqrt_spp as f64;
         self.center = self.lookfrom;
         let theta = degrees_to_radians(self.vfov);
         let h = (theta / 2.0).tan();
@@ -104,12 +110,21 @@ impl Camera {
     fn sample_square() -> Vec3 {
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
+    fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3 {
+        let px = ((s_i as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        let py = ((s_j as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        Vec3 {
+            x: px,
+            y: py,
+            z: 0.0,
+        }
+    }
     fn defocus_disk_sample(&self) -> Vec3 {
         let p = Vec3::random_unit_vector();
         self.center + (self.defocus_disk_u * p.x) + (self.defocus_disk_v * p.y)
     }
-    fn get_ray(&self, i: u32, j: u32) -> Ray {
-        let offset = Self::sample_square();
+    fn get_ray(&self, i: u32, j: u32, s_i: u32, s_j: u32) -> Ray {
+        let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_sample = self.pixel00_loc
             + (self.pixel_delta_u * (i as f64 + offset.x))
             + (self.pixel_delta_v * (j as f64 + offset.y));
@@ -148,11 +163,16 @@ impl Camera {
                 (0..self.image_width).into_par_iter().map(move |i| {
                     let rate = 0.5;
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                    for _sample in 0..self.samples_per_pixel {
-                        // 这里 self 会被自动地、不可变地借用 (&self)
-                        // world 会被自动地、不可变地借用 (&world)
-                        let r = self.get_ray(i, j);
-                        pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                    // for _sample in 0..self.samples_per_pixel {
+                    //     let r = self.get_ray(i, j);
+                    //     pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                    // }
+                    for s_j in 0..self.sqrt_spp {
+                        for s_i in 0..self.sqrt_spp {
+                            let r = self.get_ray(i, j, s_i, s_j);
+                            pixel_color =
+                                pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                        }
                     }
                     (i, j, pixel_color)
                 })
