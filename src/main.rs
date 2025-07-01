@@ -34,6 +34,7 @@ use material::Material;
 use rand::random;
 use sphere::Sphere;
 use std::sync::Arc;
+use std::time::Instant;
 use utility::PI;
 use vec3::Vec3;
 
@@ -615,8 +616,91 @@ fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) {
     cam.initialize();
     cam.render(&world, path);
 }
+fn book3_cornell_box() {
+    let mut world = HittableList::new();
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(green),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(red),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 554.0, 227.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        Arc::new(light),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(white),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        Arc::new(white),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(white),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let box1 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 330.0, 165.0),
+        Arc::new(white),
+    );
+    let box1 = Arc::new(RotateY::new(box1, 15.0));
+    let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    world.add(box1);
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let box2 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 165.0, 165.0),
+        Arc::new(white),
+    );
+    let box2 = Arc::new(RotateY::new(box2, -18.0));
+    let box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    world.add(box2);
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        64,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/book3/image1.png");
+    cam.initialize();
+    cam.render(&world, path);
+}
 fn main() {
-    let a = 9;
+    let start = Instant::now();
+    let a = 10;
     match a {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
@@ -627,6 +711,9 @@ fn main() {
         7 => cornell_box(),
         8 => cornell_smoke(),
         9 => final_scene(800, 10000, 40),
-        _ => final_scene(400, 250, 4),
+        10 => book3_cornell_box(),
+        _ => final_scene(200, 10000, 4),
     }
+    let duration = start.elapsed();
+    println!("代码执行耗时: {:?}", duration);
 }
