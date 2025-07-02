@@ -49,8 +49,8 @@ impl Material for Lambertian {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
-        // let mut scatter_direction = Vec3::random_on_hemisphere(&rec.normal);
+        // let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction = Vec3::random_on_hemisphere(&rec.normal);
         if (scatter_direction.near_zero()) {
             scatter_direction = rec.normal;
         }
@@ -59,9 +59,9 @@ impl Material for Lambertian {
         true
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cos_theta = rec.normal.dot(&scattered.direction.unit());
-        if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
-        // return 1.0 / (2.0 * PI);
+        // let cos_theta = rec.normal.dot(&scattered.direction.unit());
+        // if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
+        return 1.0 / (2.0 * PI);
     }
 }
 
