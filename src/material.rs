@@ -2,7 +2,7 @@ use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
-use crate::utility::random_double;
+use crate::utility::{random_double, PI};
 use crate::vec3::Vec3;
 use dyn_clone::DynClone;
 use rand::random;
@@ -19,6 +19,9 @@ pub trait Material: DynClone + Send + Sync {
     ) -> bool;
     fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
         Color::new(0.0, 0.0, 0.0)
+    }
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        0.0
     }
 }
 
@@ -53,6 +56,14 @@ impl Material for Lambertian {
         *scattered = Ray::new_time(rec.p, scatter_direction, r_in.tm);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         true
+    }
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta = rec.normal.dot(&scattered.direction.unit());
+        if cos_theta < 0.0 {
+            0.0
+        } else {
+            cos_theta / PI
+        }
     }
 }
 
