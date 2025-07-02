@@ -2,7 +2,7 @@ use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
-use crate::utility::{random_double, PI};
+use crate::utility::{PI, random_double};
 use crate::vec3::Vec3;
 use dyn_clone::DynClone;
 use rand::random;
@@ -50,6 +50,7 @@ impl Material for Lambertian {
         scattered: &mut Ray,
     ) -> bool {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        // let mut scatter_direction = Vec3::random_on_hemisphere(&rec.normal);
         if (scatter_direction.near_zero()) {
             scatter_direction = rec.normal;
         }
@@ -59,11 +60,8 @@ impl Material for Lambertian {
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cos_theta = rec.normal.dot(&scattered.direction.unit());
-        if cos_theta < 0.0 {
-            0.0
-        } else {
-            cos_theta / PI
-        }
+        if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
+        // return 1.0 / (2.0 * PI);
     }
 }
 

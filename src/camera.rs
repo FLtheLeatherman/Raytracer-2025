@@ -4,7 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::utility::{INFINITY, degrees_to_radians, random_double, PI};
+use crate::utility::{INFINITY, PI, degrees_to_radians, random_double};
 use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -154,7 +154,8 @@ impl Camera {
         }
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
         let pdf_value = 1.0 / (2.0 * PI);
-        let color_from_scatter = attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
+        let color_from_scatter =
+            attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
         color_from_emission + color_from_scatter
     }
     pub fn render(&self, world: &(dyn Hittable + Sync), path: &std::path::Path) {
