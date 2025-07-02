@@ -138,7 +138,7 @@ impl Camera {
         let ray_time = random_double();
         Ray::new_time(ray_origin, ray_direction, ray_time)
     }
-    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable, rate: f64) -> Color {
+    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -152,7 +152,7 @@ impl Camera {
         if !rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
             return color_from_emission;
         }
-        let color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world, rate);
+        let color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world);
         color_from_emission + color_from_scatter
     }
     pub fn render(&self, world: &(dyn Hittable + Sync), path: &std::path::Path) {
@@ -161,17 +161,15 @@ impl Camera {
             .into_par_iter()
             .flat_map(|j| {
                 (0..self.image_width).into_par_iter().map(move |i| {
-                    let rate = 0.5;
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                     // for _sample in 0..self.samples_per_pixel {
                     //     let r = self.get_ray(i, j);
-                    //     pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                    //     pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
                     // }
                     for s_j in 0..self.sqrt_spp {
                         for s_i in 0..self.sqrt_spp {
                             let r = self.get_ray(i, j, s_i, s_j);
-                            pixel_color =
-                                pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+                            pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
                         }
                     }
                     (i, j, pixel_color)
@@ -188,11 +186,10 @@ impl Camera {
         // };
         // for j in 0..self.image_height {
         //     for i in 0..self.image_width {
-        //         let rate = 0.5;
         //         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         //         for sample in 0..self.samples_per_pixel {
         //             let r = self.get_ray(i, j);
-        //             pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, rate);
+        //             pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
         //         }
         //         write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
         //         progress.inc(1);
