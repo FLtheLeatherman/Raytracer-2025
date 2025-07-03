@@ -2,7 +2,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
-use crate::pdf::{CosinePDF, PDF};
+use crate::pdf::{CosinePDF, HittablePDF, PDF};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::utility::{INFINITY, PI, degrees_to_radians, random_double, random_double_range};
@@ -12,6 +12,7 @@ use indicatif::ProgressBar;
 use lazy_static::initialize;
 use rand::random;
 use rayon::prelude::*;
+use std::sync::Arc;
 
 pub struct Camera {
     aspect_ratio: f64,
@@ -139,7 +140,13 @@ impl Camera {
         let ray_time = random_double();
         Ray::new_time(ray_origin, ray_direction, ray_time)
     }
-    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(
+        &self,
+        r: &Ray,
+        depth: i32,
+        world: &Arc<dyn Hittable>,
+        lights: &Arc<dyn Hittable>,
+    ) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -157,29 +164,32 @@ impl Camera {
         {
             return color_from_emission;
         }
-        let surface_pdf = CosinePDF::new(&rec.normal);
-        scattered = Ray::new_time(rec.p, surface_pdf.generate(), r.tm);
-        pdf_value = surface_pdf.value(&scattered.direction);
+        let light_pdf = HittablePDF::new(lights, &rec.p);
+        let scattered = Ray::new_time(rec.p, light_pdf.generate(), r.tm);
+        pdf_value = light_pdf.value(&scattered.direction);
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
-        let color_from_scatter =
-            attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
+        let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+        let color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value;
         color_from_emission + color_from_scatter
     }
-    pub fn render(&self, world: &(dyn Hittable + Sync), path: &std::path::Path) {
+    pub fn render(
+        &self,
+        world: &Arc<dyn Hittable>,
+        lights: &Arc<dyn Hittable>,
+        path: &std::path::Path,
+    ) {
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
+        println!("FUCK");
         let pixels: Vec<(u32, u32, Color)> = (0..self.image_height)
             .into_par_iter()
             .flat_map(|j| {
                 (0..self.image_width).into_par_iter().map(move |i| {
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                    // for _sample in 0..self.samples_per_pixel {
-                    //     let r = self.get_ray(i, j);
-                    //     pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
-                    // }
                     for s_j in 0..self.sqrt_spp {
                         for s_i in 0..self.sqrt_spp {
                             let r = self.get_ray(i, j, s_i, s_j);
-                            pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
+                            pixel_color =
+                                pixel_color + self.ray_color(&r, self.max_depth, world, lights);
                         }
                     }
                     (i, j, pixel_color)
@@ -197,9 +207,11 @@ impl Camera {
         // for j in 0..self.image_height {
         //     for i in 0..self.image_width {
         //         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-        //         for sample in 0..self.samples_per_pixel {
-        //             let r = self.get_ray(i, j);
-        //             pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world);
+        //         for s_j in 0..self.sqrt_spp {
+        //             for s_i in 0..self.sqrt_spp {
+        //                 let r = self.get_ray(i, j, s_i, s_j);
+        //                 pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, lights);
+        //             }
         //         }
         //         write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
         //         progress.inc(1);
@@ -207,6 +219,7 @@ impl Camera {
         // }
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
+        println!("GOOD");
         img.save(path).expect("Cannot save the image to the file");
     }
 }

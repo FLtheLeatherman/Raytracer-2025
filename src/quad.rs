@@ -4,6 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
 use stb_image::image::load_with_depth;
 use std::sync::Arc;
@@ -17,6 +18,7 @@ pub struct Quad {
     bbox: AABB,
     normal: Vec3,
     d: f64,
+    area: f64,
 }
 impl Quad {
     pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
@@ -33,6 +35,7 @@ impl Quad {
             bbox: AABB::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
             normal,
             d: normal.dot(q),
+            area: n.length(),
         }
     }
     fn is_interior(a: f64, b: f64, rec: &mut HitRecord) -> bool {
@@ -70,6 +73,23 @@ impl Hittable for Quad {
     }
     fn bounding_box(&self) -> AABB {
         self.bbox
+    }
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {
+        let mut rec = HitRecord::default();
+        if !self.hit(
+            &Ray::new(*origin, *direction),
+            &Interval::new(0.001, INFINITY),
+            &mut rec,
+        ) {
+            return 0.0;
+        }
+        let distance_squared = rec.t * rec.t * direction.squared_length();
+        let cosine = (direction.dot(&rec.normal) / direction.length()).abs();
+        distance_squared / (cosine * self.area)
+    }
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        let p = self.q + (self.u * random_double()) + (self.v * random_double());
+        p - *origin
     }
 }
 pub fn make_box(a: &Vec3, b: &Vec3, mat: Arc<dyn Material>) -> Arc<HittableList> {

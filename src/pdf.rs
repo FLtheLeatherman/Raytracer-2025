@@ -47,19 +47,19 @@ pub struct HittablePDF {
     origin: Vec3,
 }
 impl HittablePDF {
-    pub fn new(objects: Arc<dyn Hittable>, origin: &Vec3) -> Self {
+    pub fn new(objects: &Arc<dyn Hittable>, origin: &Vec3) -> Self {
         Self {
-            objects,
+            objects: objects.clone(),
             origin: *origin,
         }
     }
 }
 impl PDF for HittablePDF {
     fn value(&self, direction: &Vec3) -> f64 {
-        todo!()
+        self.objects.pdf_value(&self.origin, direction)
     }
 
     fn generate(&self) -> Vec3 {
-        todo!()
+        self.objects.random(&self.origin)
     }
 }
