@@ -19,7 +19,7 @@ pub trait Material: DynClone + Send + Sync {
         scattered: &mut Ray,
         pdf: &mut f64,
     ) -> bool;
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
@@ -164,7 +164,10 @@ impl Material for DiffuseLight {
     ) -> bool {
         false
     }
-    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
+        if !rec.front_face {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         self.tex.value(u, v, p)
     }
 }
