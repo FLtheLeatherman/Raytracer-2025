@@ -2,6 +2,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
+use crate::material::ScatterRecord;
 use crate::pdf::{CosinePDF, HittablePDF, MixturePDF, PDF};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
@@ -154,24 +155,21 @@ impl Camera {
         if !world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
             return self.background;
         }
-        let mut scattered = Ray::default();
-        let mut attenuation = Color::default();
-        let mut pdf_value = 0.0;
+        let mut srec = ScatterRecord::default();
         let color_from_emission = rec.mat.emitted(r, &rec, rec.u, rec.v, &rec.p);
-        if !rec
-            .mat
-            .scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf_value)
-        {
+        if !rec.mat.scatter(r, &rec, &mut srec) {
             return color_from_emission;
         }
-        let p0 = Arc::new(HittablePDF::new(lights, &rec.p));
-        let p1 = Arc::new(CosinePDF::new(&rec.normal));
-        let mixed_pdf = MixturePDF::new(p0, p1);
-        scattered = Ray::new_time(rec.p, mixed_pdf.generate(), r.tm);
-        pdf_value = mixed_pdf.value(&scattered.direction);
+        if srec.skip_pdf {
+            return srec.attenuation * self.ray_color(&srec.skip_pdf_ray, depth - 1, world, lights);
+        }
+        let light_ptr = Arc::new(HittablePDF::new(lights, &rec.p));
+        let p = MixturePDF::new(light_ptr, srec.pdf_ptr);
+        let scattered = Ray::new_time(rec.p, p.generate(), r.tm);
+        let pdf_value = p.value(&scattered.direction);
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
         let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
-        let color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value;
+        let color_from_scatter = (srec.attenuation * scattering_pdf * sample_color) / pdf_value;
         color_from_emission + color_from_scatter
     }
     pub fn render(

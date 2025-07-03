@@ -662,11 +662,11 @@ fn book3_cornell_box() {
         &Vec3::new(0.0, 555.0, 0.0),
         Arc::new(white),
     )));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let aluminum = Metal::new(Color::new(0.8, 0.85, 0.88), 0.0);
     let box1 = make_box(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(165.0, 330.0, 165.0),
-        Arc::new(white),
+        Arc::new(aluminum),
     );
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
@@ -703,7 +703,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image11.png");
+    let path = std::path::Path::new("output/book3/image12.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
