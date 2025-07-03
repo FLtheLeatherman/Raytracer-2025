@@ -1,9 +1,10 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
+use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
 use crate::utility::{PI, random_double};
-use crate::vec3::Vec3;
+use crate::vec3::{Vec3, random_cosine_direction};
 use dyn_clone::DynClone;
 use rand::random;
 use std::ops::Neg;
@@ -16,6 +17,7 @@ pub trait Material: DynClone + Send + Sync {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool;
     fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Color {
         Color::new(0.0, 0.0, 0.0)
@@ -48,14 +50,13 @@ impl Material for Lambertian {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
-        // let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
-        let mut scatter_direction = Vec3::random_on_hemisphere(&rec.normal);
-        if (scatter_direction.near_zero()) {
-            scatter_direction = rec.normal;
-        }
-        *scattered = Ray::new_time(rec.p, scatter_direction, r_in.tm);
+        let uvw = ONB::new(&rec.normal);
+        let scatter_direction = uvw.transform(&random_cosine_direction());
+        *scattered = Ray::new_time(rec.p, scatter_direction.unit(), r_in.tm);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        *pdf = uvw.w().dot(&scattered.direction) / PI;
         true
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
@@ -82,6 +83,7 @@ impl Material for Metal {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
         let mut reflected = Vec3::reflect(&r_in.direction, &rec.normal);
         reflected = reflected.unit() + (Vec3::random_unit_vector() * self.fuzz);
@@ -112,6 +114,7 @@ impl Material for Dielectric {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0);
         let mut ri: f64 = 0.0;
@@ -157,6 +160,7 @@ impl Material for DiffuseLight {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
         false
     }
@@ -186,9 +190,14 @@ impl Material for Isotropic {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
         *scattered = Ray::new_time(rec.p, Vec3::random_unit_vector(), r_in.tm);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        *pdf = 1.0 / (4.0 * PI);
         true
+    }
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        1.0 / (4.0 * PI)
     }
 }

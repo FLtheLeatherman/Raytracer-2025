@@ -10,6 +10,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod onb;
 mod perlin;
 mod quad;
 mod ray;
@@ -694,7 +695,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image5.png");
+    let path = std::path::Path::new("output/book3/image6.png");
     cam.initialize();
     cam.render(&world, path);
 }

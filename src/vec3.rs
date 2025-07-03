@@ -1,4 +1,4 @@
-use crate::utility::{random_double, random_double_range};
+use crate::utility::{PI, random_double, random_double_range};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -139,4 +139,14 @@ impl Div<f64> for Vec3 {
     fn div(self, rhs: f64) -> Self::Output {
         Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
     }
+}
+
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random_double();
+    let r2 = random_double();
+    let phi = 2.0 * PI * r1;
+    let x = phi.cos() * r2.sqrt();
+    let y = phi.sin() * r2.sqrt();
+    let z = (1.0 - r2).sqrt();
+    Vec3::new(x, y, z)
 }
