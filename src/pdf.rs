@@ -1,6 +1,6 @@
 use crate::hittable::Hittable;
 use crate::onb::ONB;
-use crate::utility::{random_double, PI};
+use crate::utility::{PI, random_double};
 use crate::vec3::{Vec3, random_cosine_direction};
 use std::sync::Arc;
 
@@ -69,9 +69,7 @@ pub struct MixturePDF {
 }
 impl MixturePDF {
     pub fn new(p0: Arc<dyn PDF>, p1: Arc<dyn PDF>) -> Self {
-        Self {
-            p: [p0, p1],
-        }
+        Self { p: [p0, p1] }
     }
 }
 impl PDF for MixturePDF {
