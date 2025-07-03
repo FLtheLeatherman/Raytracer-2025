@@ -696,7 +696,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image8.png");
+    let path = std::path::Path::new("../output/book3/image9.png");
     cam.initialize();
     cam.render(&world, path);
 }
