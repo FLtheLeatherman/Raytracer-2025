@@ -2,7 +2,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
-use crate::pdf::{CosinePDF, HittablePDF, PDF};
+use crate::pdf::{CosinePDF, HittablePDF, MixturePDF, PDF};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::utility::{INFINITY, PI, degrees_to_radians, random_double, random_double_range};
@@ -164,9 +164,11 @@ impl Camera {
         {
             return color_from_emission;
         }
-        let light_pdf = HittablePDF::new(lights, &rec.p);
-        let scattered = Ray::new_time(rec.p, light_pdf.generate(), r.tm);
-        pdf_value = light_pdf.value(&scattered.direction);
+        let p0 = Arc::new(HittablePDF::new(lights, &rec.p));
+        let p1 = Arc::new(CosinePDF::new(&rec.normal));
+        let mixed_pdf = MixturePDF::new(p0, p1);
+        scattered = Ray::new_time(rec.p, mixed_pdf.generate(), r.tm);
+        pdf_value = mixed_pdf.value(&scattered.direction);
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
         let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
         let color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value;
@@ -198,24 +200,6 @@ impl Camera {
         for (i, j, pixel_color) in pixels {
             write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
         }
-        // let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        //     ProgressBar::hidden()
-        // } else {
-        //     ProgressBar::new((self.image_height * self.image_width) as u64)
-        // };
-        // for j in 0..self.image_height {
-        //     for i in 0..self.image_width {
-        //         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-        //         for s_j in 0..self.sqrt_spp {
-        //             for s_i in 0..self.sqrt_spp {
-        //                 let r = self.get_ray(i, j, s_i, s_j);
-        //                 pixel_color = pixel_color + self.ray_color(&r, self.max_depth, world, lights);
-        //             }
-        //         }
-        //         write_color(i, j, &(pixel_color * self.pixel_sample_scale), &mut img);
-        //         progress.inc(1);
-        //     }
-        // }
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
         println!("Saving image to: {:?}", path);

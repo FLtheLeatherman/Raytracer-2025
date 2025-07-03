@@ -693,7 +693,7 @@ fn book3_cornell_box() {
     let mut cam: Camera = Camera::new(
         1.0,
         600,
-        10,
+        1000,
         50,
         40.0,
         lookfrom,
@@ -703,7 +703,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image10.png");
+    let path = std::path::Path::new("output/book3/image11.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
