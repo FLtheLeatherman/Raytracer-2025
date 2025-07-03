@@ -685,7 +685,7 @@ fn book3_cornell_box() {
     let mut cam: Camera = Camera::new(
         1.0,
         600,
-        1000,
+        10,
         50,
         40.0,
         lookfrom,
@@ -695,7 +695,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image6.png");
+    let path = std::path::Path::new("output/book3/image7.png");
     cam.initialize();
     cam.render(&world, path);
 }

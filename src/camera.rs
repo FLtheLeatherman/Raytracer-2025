@@ -4,7 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::utility::{INFINITY, PI, degrees_to_radians, random_double};
+use crate::utility::{INFINITY, PI, degrees_to_radians, random_double, random_double_range};
 use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
@@ -156,8 +156,25 @@ impl Camera {
         {
             return color_from_emission;
         }
+        let on_light = Vec3::new(
+            random_double_range(213.0, 343.0),
+            554.0,
+            random_double_range(227.0, 332.0),
+        );
+        let mut to_light = on_light - rec.p;
+        let distance_squared = to_light.squared_length();
+        to_light = to_light.unit();
+        if to_light.dot(&rec.normal) < 0.0 {
+            return color_from_emission;
+        }
+        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+        let light_cosing = to_light.y.abs();
+        if light_cosing < 0.000001 {
+            return color_from_emission;
+        }
+        pdf_value = distance_squared / (light_cosing * light_area);
+        scattered = Ray::new_time(rec.p, to_light, r.tm);
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
-        pdf_value = scattering_pdf;
         let color_from_scatter =
             attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
         color_from_emission + color_from_scatter
