@@ -2,6 +2,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
+use crate::pdf::{CosinePDF, PDF};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::utility::{INFINITY, PI, degrees_to_radians, random_double, random_double_range};
@@ -156,24 +157,9 @@ impl Camera {
         {
             return color_from_emission;
         }
-        let on_light = Vec3::new(
-            random_double_range(213.0, 343.0),
-            554.0,
-            random_double_range(227.0, 332.0),
-        );
-        let mut to_light = on_light - rec.p;
-        let distance_squared = to_light.squared_length();
-        to_light = to_light.unit();
-        if to_light.dot(&rec.normal) < 0.0 {
-            return color_from_emission;
-        }
-        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-        let light_cosing = to_light.y.abs();
-        if light_cosing < 0.000001 {
-            return color_from_emission;
-        }
-        pdf_value = distance_squared / (light_cosing * light_area);
-        scattered = Ray::new_time(rec.p, to_light, r.tm);
+        let surface_pdf = CosinePDF::new(&rec.normal);
+        scattered = Ray::new_time(rec.p, surface_pdf.generate(), r.tm);
+        pdf_value = surface_pdf.value(&scattered.direction);
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
         let color_from_scatter =
             attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;

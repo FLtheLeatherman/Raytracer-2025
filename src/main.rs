@@ -11,6 +11,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod onb;
+mod pdf;
 mod perlin;
 mod quad;
 mod ray;
@@ -685,7 +686,7 @@ fn book3_cornell_box() {
     let mut cam: Camera = Camera::new(
         1.0,
         600,
-        10,
+        1000,
         50,
         40.0,
         lookfrom,
