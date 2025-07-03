@@ -688,12 +688,18 @@ fn book3_cornell_box() {
         Arc::new(glass),
     )));
     let empty_material = Arc::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
-    let lights = Quad::new(
+    let mut lights = HittableList::new();
+    lights.add(Arc::new(Quad::new(
         &Vec3::new(343.0, 554.0, 332.0),
         &Vec3::new(-130.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, -105.0),
+        empty_material.clone(),
+    )));
+    lights.add(Arc::new(Sphere::new(
+        Vec3::new(190.0, 90.0, 190.0),
+        90.0,
         empty_material,
-    );
+    )));
     let lookfrom = Vec3::new(278.0, 278.0, -800.0);
     let lookat = Vec3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -710,7 +716,7 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/book3/image13.png");
+    let path = std::path::Path::new("output/book3/image14.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
