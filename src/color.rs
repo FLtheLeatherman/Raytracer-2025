@@ -19,13 +19,13 @@ pub fn write_color(x: u32, y: u32, pixel_color: &Color, img: &mut RgbImage) {
     let mut _r = pixel_color.x;
     let mut _g = pixel_color.y;
     let mut _b = pixel_color.z;
-    if _r.is_nan() {
+    if _r != _r {
         _r = 0.0;
     }
-    if _g.is_nan() {
+    if _g != _g {
         _g = 0.0;
     }
-    if _b.is_nan() {
+    if _b != _b {
         _b = 0.0;
     }
     let r = (INTENSITY.clamp(linear_to_gamma(_r)) * 256.0) as u8;
