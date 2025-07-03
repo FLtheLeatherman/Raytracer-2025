@@ -179,7 +179,6 @@ impl Camera {
         path: &std::path::Path,
     ) {
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
-        println!("FUCK");
         let pixels: Vec<(u32, u32, Color)> = (0..self.image_height)
             .into_par_iter()
             .flat_map(|j| {
@@ -219,7 +218,15 @@ impl Camera {
         // }
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
-        println!("GOOD");
-        img.save(path).expect("Cannot save the image to the file");
+        println!("Saving image to: {:?}", path);
+        println!("Parent directory: {:?}", path.parent());
+        println!(
+            "Image dimensions: {}x{}",
+            self.image_width, self.image_height
+        );
+        println!("Pixels in image: {}", img.len());
+        if let Err(e) = img.save(path) {
+            eprintln!("Failed to save image: {}", e);
+        }
     }
 }

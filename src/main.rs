@@ -703,11 +703,10 @@ fn book3_cornell_box() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("../output/book3/image0.png");
+    let path = std::path::Path::new("output/book3/image10.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
-    print!("OK!");
     cam.render(&world_arc, &lights_arc, path);
 }
 fn main() {
