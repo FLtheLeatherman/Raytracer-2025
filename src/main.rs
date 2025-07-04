@@ -18,9 +18,9 @@ mod ray;
 mod rtw_stb_image;
 mod sphere;
 mod texture;
+mod triangle;
 mod utility;
 mod vec3;
-mod triangle;
 
 use crate::bvh::BvhNode;
 use crate::camera::Camera;
@@ -733,9 +733,7 @@ fn book3_cornell_box() {
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
     cam.render(&world_arc, &lights_arc, path);
 }
-fn obj_test() {
-    
-}
+fn obj_test() {}
 fn main() {
     let start = Instant::now();
     let a = 9;
