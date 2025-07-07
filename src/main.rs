@@ -766,7 +766,101 @@ fn obj_test() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/test.png");
+    let path = std::path::Path::new("output/test_obj.png");
+    cam.initialize();
+    let world_arc: Arc<dyn Hittable> = Arc::new(world);
+    let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
+    cam.render(&world_arc, &lights_arc, path);
+}
+fn normal_mapping_test() {
+    let mut world = HittableList::new();
+    let mut lights = HittableList::new();
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let blue = Lambertian::new(Color::new(0.05, 0.05, 0.45));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(green),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(red),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        Arc::new(light),
+    )));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    lights.add(Arc::new(Quad::new(
+        &Vec3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        Arc::new(light),
+    )));
+    world.add(Arc::new(Quad::new_with_img(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(white),
+        "images/normal_mapping1.jpg",
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 555.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        Arc::new(white),
+    )));
+    world.add(Arc::new(Quad::new_with_img(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(blue),
+        "images/normal_mapping2.jpg",
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let box1 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 330.0, 165.0),
+        Arc::new(white),
+    );
+    let box1 = Arc::new(RotateY::new(box1, 15.0));
+    let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    world.add(box1);
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let box2 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(165.0, 165.0, 165.0),
+        Arc::new(white),
+    );
+    let box2 = Arc::new(RotateY::new(box2, -18.0));
+    let box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    world.add(box2);
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        1000,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/test_normal_mapping.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
@@ -774,9 +868,10 @@ fn obj_test() {
 }
 fn main() {
     let start = Instant::now();
-    let a = 1;
+    let a = 2;
     match a {
         1 => obj_test(),
+        2 => normal_mapping_test(),
         9 => final_scene(800, 10000, 40),
         10 => book3_cornell_box(),
         _ => (),

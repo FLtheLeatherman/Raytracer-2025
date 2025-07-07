@@ -6,8 +6,8 @@ static MAGENTA: [u8; BYTES_PER_PIXEL] = [255, 0, 255];
 #[derive(Default)]
 pub struct RtwImage {
     data: Vec<u8>,
-    image_width: usize,
-    image_height: usize,
+    pub image_width: usize,
+    pub image_height: usize,
     bytes_per_scanline: usize,
 }
 impl RtwImage {

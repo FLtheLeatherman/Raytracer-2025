@@ -4,6 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::rtw_stb_image::RtwImage;
 use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
 use stb_image::image::load_with_depth;
@@ -19,6 +20,7 @@ pub struct Quad {
     normal: Vec3,
     d: f64,
     area: f64,
+    pub image: Option<RtwImage>,
 }
 impl Quad {
     pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
@@ -36,6 +38,31 @@ impl Quad {
             normal,
             d: normal.dot(q),
             area: n.length(),
+            image: None,
+        }
+    }
+    pub fn new_with_img(
+        q: &Vec3,
+        u: &Vec3,
+        v: &Vec3,
+        mat: Arc<dyn Material>,
+        image_filename: &str,
+    ) -> Self {
+        let bbox_diagonal1 = AABB::new_points(q, &(*q + *u + *v));
+        let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
+        let n = u.cross(v);
+        let normal = n.unit();
+        Self {
+            q: *q,
+            u: *u,
+            v: *v,
+            w: n / n.dot(&n),
+            mat: mat.clone(),
+            bbox: AABB::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
+            normal,
+            d: normal.dot(q),
+            area: n.length(),
+            image: Option::from(RtwImage::new(image_filename)),
         }
     }
     fn is_interior(a: f64, b: f64, rec: &mut HitRecord) -> bool {
@@ -46,6 +73,23 @@ impl Quad {
         rec.u = a;
         rec.v = b;
         true
+    }
+    fn get_normal(&self, u: f64, v: f64) -> Vec3 {
+        match &self.image {
+            Some(image_data) => {
+                let u = Interval::new(0.0, 1.0).clamp(u);
+                let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+                let i = (image_data.image_width as f64 * u) as usize;
+                let j = (image_data.image_height as f64 * v) as usize;
+                let pixel = image_data.pixel_data(i, j);
+                Vec3::new(
+                    (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
+                )
+            }
+            None => Vec3::new(0.0, 0.0, 0.0),
+        }
     }
 }
 impl Hittable for Quad {
@@ -68,7 +112,7 @@ impl Hittable for Quad {
         rec.t = t;
         rec.p = intersection;
         rec.mat = self.mat.clone();
-        rec.set_face_normal(r, self.normal);
+        rec.set_face_normal(r, self.get_normal(alpha, beta) + self.normal);
         true
     }
     fn bounding_box(&self) -> AABB {
