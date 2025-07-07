@@ -10,6 +10,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod obj;
 mod onb;
 mod pdf;
 mod perlin;
@@ -28,17 +29,16 @@ use crate::color::Color;
 use crate::constant_medium::ConstantMedium;
 use crate::hittable::{RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
+use crate::obj::load_model;
 use crate::quad::{Quad, make_box};
-use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, SolidColor};
-use crate::utility::{random_double, random_double_range};
+use crate::texture::{ImageTexture, NoiseTexture};
+use crate::triangle::Triangle;
+use crate::utility::random_double_range;
 use hittable::Hittable;
 use hittable_list::HittableList;
-use material::Material;
-use rand::random;
 use sphere::Sphere;
 use std::sync::Arc;
 use std::time::Instant;
-use utility::PI;
 use vec3::Vec3;
 
 // fn bouncing_spheres() {
@@ -733,10 +733,48 @@ fn book3_cornell_box() {
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
     cam.render(&world_arc, &lights_arc, path);
 }
-fn obj_test() {}
+fn obj_test() {
+    let mut world = load_model("cornell_box.obj");
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 548.0, 227.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        Arc::new(light),
+    )));
+    let mut lights = HittableList::new();
+    let light = DiffuseLight::new(&Color::new(7.0, 7.0, 7.0));
+    lights.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 548.0, 227.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        Arc::new(light),
+    )));
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        1000,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/test.png");
+    cam.initialize();
+    let world_arc: Arc<dyn Hittable> = Arc::new(world);
+    let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
+    cam.render(&world_arc, &lights_arc, path);
+}
 fn main() {
     let start = Instant::now();
-    let a = 9;
+    let a = 1;
     match a {
         1 => obj_test(),
         9 => final_scene(800, 10000, 40),

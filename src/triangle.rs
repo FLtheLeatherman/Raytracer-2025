@@ -22,7 +22,7 @@ pub struct Triangle {
 }
 impl Triangle {
     pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
-        let bbox_diagonal1 = AABB::new_points(q, &(*q + *u + *v));
+        let bbox_diagonal1 = AABB::new_points(q, &(*q + *u));
         let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
         let n = u.cross(v);
         let normal = n.unit();
@@ -35,12 +35,15 @@ impl Triangle {
             bbox: AABB::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
             normal,
             d: normal.dot(q),
-            area: n.length(),
+            area: n.length() / 2.0,
         }
     }
     fn is_interior(a: f64, b: f64, rec: &mut HitRecord) -> bool {
         let unit_interval = Interval::new(0.0, 1.0);
-        if !unit_interval.contains(a) || !unit_interval.contains(b) {
+        if !unit_interval.contains(a)
+            || !unit_interval.contains(b)
+            || !unit_interval.contains(a + b)
+        {
             return false;
         }
         rec.u = a;
@@ -88,7 +91,13 @@ impl Hittable for Triangle {
         distance_squared / (cosine * self.area)
     }
     fn random(&self, origin: &Vec3) -> Vec3 {
-        let p = self.q + (self.u * random_double()) + (self.v * random_double());
+        let mut a = random_double();
+        let mut b = random_double();
+        if a + b > 1.0 {
+            a = 1.0 - a;
+            b = 1.0 - b;
+        }
+        let p = self.q + (self.u * a) + (self.v * b);
         p - *origin
     }
 }

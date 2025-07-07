@@ -46,7 +46,7 @@ impl Hittable for ConstantMedium {
         if rec1.t < ray_t.min {
             rec1.t = ray_t.min;
         }
-        if (rec2.t > ray_t.max) {
+        if rec2.t > ray_t.max {
             rec2.t = ray_t.max;
         }
         if rec1.t >= rec2.t {
