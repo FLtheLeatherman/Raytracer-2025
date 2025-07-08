@@ -39,13 +39,14 @@ impl HitRecord {
             mat: mat.clone(),
         }
     }
-    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        if Vec3::dot(&r.direction, &outward_normal) < 0.0 {
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3, u: f64, v: f64) {
+        let normal = outward_normal + self.mat.get_normal(u, v);
+        if Vec3::dot(&r.direction, &normal) < 0.0 {
             self.front_face = true;
-            self.normal = outward_normal;
+            self.normal = normal;
         } else {
             self.front_face = false;
-            self.normal = -outward_normal;
+            self.normal = -normal;
         }
     }
 }

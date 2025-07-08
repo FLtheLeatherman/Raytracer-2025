@@ -71,7 +71,7 @@ impl Hittable for Triangle {
         rec.t = t;
         rec.p = intersection;
         rec.mat = self.mat.clone();
-        rec.set_face_normal(r, self.normal);
+        rec.set_face_normal(r, self.normal, alpha, beta);
         true
     }
     fn bounding_box(&self) -> AABB {

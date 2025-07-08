@@ -10,7 +10,10 @@ use dyn_clone::DynClone;
 use rand::random;
 use std::ops::Neg;
 use std::ptr::{null, null_mut};
+use std::slice::EscapeAscii;
 use std::sync::Arc;
+use crate::interval::Interval;
+use crate::rtw_stb_image::RtwImage;
 
 pub struct ScatterRecord {
     pub attenuation: Color,
@@ -36,6 +39,9 @@ pub trait Material: DynClone + Send + Sync {
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         0.0
+    }
+    fn get_normal(&self, u: f64, v: f64) -> Vec3 {
+        Vec3::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -180,5 +186,63 @@ impl Material for Isotropic {
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         1.0 / (4.0 * PI)
+    }
+}
+
+#[derive(Clone)]
+pub struct MappedMaterial {
+    base_material: Arc<dyn Material>,
+    normal_map: Option<Arc<RtwImage>>,
+    alpha_map: Option<Arc<RtwImage>>,
+    light_map: Option<Arc<RtwImage>>,
+    emissive_strength: f64,
+}
+impl MappedMaterial {
+    pub fn new(base_material: Arc<dyn Material>) -> Self {
+        Self {
+            base_material: base_material.clone(),
+            normal_map: None,
+            alpha_map: None,
+            light_map: None,
+            emissive_strength: 0.0,
+        }
+    }
+    pub fn set_normal(&mut self, normal_filename: &str) {
+        self.normal_map = Option::from(Arc::new(RtwImage::new(normal_filename)));
+    }
+    pub fn set_alpha(&mut self, alpha_filename: &str) {
+        self.alpha_map = Option::from(Arc::new(RtwImage::new(alpha_filename)));
+    }
+    pub fn set_light(&mut self, light_filename: &str, emissive_strength: f64) {
+        self.light_map = Option::from(Arc::new(RtwImage::new(light_filename)));
+        self.emissive_strength = emissive_strength;
+    }
+}
+impl Material for MappedMaterial {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        self.base_material.scatter(r_in, rec, srec)
+    }
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
+        self.base_material.emitted(r_in, rec, u, v, p)
+    }
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        self.base_material.scattering_pdf(r_in, rec, scattered)
+    }
+    fn get_normal(&self, u: f64, v: f64) -> Vec3 {
+        match &self.normal_map {
+            Some(image_data) => {
+                let u = Interval::new(0.0, 1.0).clamp(u);
+                let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+                let i = (image_data.image_width as f64 * u) as usize;
+                let j = (image_data.image_height as f64 * v) as usize;
+                let pixel = image_data.pixel_data(i, j);
+                Vec3::new(
+                    (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
+                )
+            }
+            None => Vec3::new(0.0, 0.0, 0.0),
+        }
     }
 }

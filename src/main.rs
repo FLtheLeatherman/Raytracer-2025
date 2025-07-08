@@ -28,7 +28,7 @@ use crate::camera::Camera;
 use crate::color::Color;
 use crate::constant_medium::ConstantMedium;
 use crate::hittable::{RotateY, Translate};
-use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, MappedMaterial, Metal};
 use crate::obj::load_model;
 use crate::quad::{Quad, make_box};
 use crate::texture::{ImageTexture, NoiseTexture};
@@ -805,12 +805,13 @@ fn normal_mapping_test() {
         &Vec3::new(0.0, 0.0, -105.0),
         Arc::new(light),
     )));
-    world.add(Arc::new(Quad::new_with_img(
+    let mut white_image1 = MappedMaterial::new(Arc::new(white));
+    white_image1.set_normal("images/normal_mapping1.jpg");
+    world.add(Arc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(555.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, 555.0),
-        Arc::new(white),
-        "images/normal_mapping1.jpg",
+        Arc::new(white_image1),
     )));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     world.add(Arc::new(Quad::new(
@@ -819,12 +820,13 @@ fn normal_mapping_test() {
         &Vec3::new(0.0, 0.0, -555.0),
         Arc::new(white),
     )));
-    world.add(Arc::new(Quad::new_with_img(
+    let mut blue_image2 = MappedMaterial::new(Arc::new(blue));
+    blue_image2.set_normal("images/normal_mapping2.jpg");
+    world.add(Arc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 555.0),
         &Vec3::new(555.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
-        Arc::new(blue),
-        "images/normal_mapping2.jpg",
+        Arc::new(blue_image2),
     )));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     let box1 = make_box(
@@ -850,7 +852,7 @@ fn normal_mapping_test() {
     let mut cam: Camera = Camera::new(
         1.0,
         600,
-        1000,
+        100,
         50,
         40.0,
         lookfrom,
