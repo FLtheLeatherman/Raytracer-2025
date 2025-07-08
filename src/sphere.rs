@@ -78,6 +78,9 @@ impl Hittable for Sphere {
         (rec.u, rec.v) = Self::get_sphere_uv(&outward_normal);
         rec.set_face_normal(r, outward_normal, rec.u, rec.v);
         rec.mat = self.mat.clone();
+        if random_double() > self.mat.get_alpha(rec.u, rec.v) {
+            return false;
+        }
         true
     }
     fn bounding_box(&self) -> AABB {

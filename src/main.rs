@@ -868,12 +868,115 @@ fn normal_mapping_test() {
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
     cam.render(&world_arc, &lights_arc, path);
 }
+fn mapping_test() {
+    let mut world = HittableList::new();
+    let mut lights = HittableList::new();
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let blue = Lambertian::new(Color::new(0.05, 0.05, 0.45));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(green),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(red),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        Arc::new(light),
+    )));
+    let light = DiffuseLight::new(&Color::new(3.0, 3.0, 3.0));
+    lights.add(Arc::new(Quad::new(
+        &Vec3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        Arc::new(light),
+    )));
+    let mut white_image1 = MappedMaterial::new(Arc::new(white));
+    white_image1.set_normal("images/normal_mapping1.jpg");
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(white_image1),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 555.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        Arc::new(white),
+    )));
+    let mut blue_image = MappedMaterial::new(Arc::new(blue));
+    blue_image.set_alpha("images/alpha_mapping.png");
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 554.9),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(blue_image),
+    )));
+    let white = Lambertian::new_tex(Arc::new(ImageTexture::new("images/genshin.jpg")));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(white),
+    )));
+    // let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    // let box1 = make_box(
+    //     &Vec3::new(0.0, 0.0, 0.0),
+    //     &Vec3::new(165.0, 330.0, 165.0),
+    //     Arc::new(white),
+    // );
+    // let box1 = Arc::new(RotateY::new(box1, 15.0));
+    // let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    // world.add(box1);
+    let tmp = Metal::new(Color::new(1.0, 1.0, 1.0), 0.5);
+    let mut light2 = MappedMaterial::new(Arc::new(tmp));
+    light2.set_light("images/light_mapping2.png", 2.0);
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(190.0, 90.0, 190.0),
+        90.0,
+        Arc::new(light2),
+    )));
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        1000,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/test_mapping.png");
+    cam.initialize();
+    let world_arc: Arc<dyn Hittable> = Arc::new(world);
+    let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
+    cam.render(&world_arc, &lights_arc, path);
+}
 fn main() {
     let start = Instant::now();
-    let a = 2;
+    let a = 3;
     match a {
         1 => obj_test(),
         2 => normal_mapping_test(),
+        3 => mapping_test(),
         9 => final_scene(800, 10000, 40),
         10 => book3_cornell_box(),
         _ => (),

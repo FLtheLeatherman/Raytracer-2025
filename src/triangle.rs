@@ -71,7 +71,12 @@ impl Hittable for Triangle {
         rec.t = t;
         rec.p = intersection;
         rec.mat = self.mat.clone();
+        rec.u = alpha;
+        rec.v = beta;
         rec.set_face_normal(r, self.normal, alpha, beta);
+        if random_double() > self.mat.get_alpha(alpha, beta) {
+            return false;
+        }
         true
     }
     fn bounding_box(&self) -> AABB {

@@ -48,6 +48,7 @@ impl HitRecord {
             self.front_face = false;
             self.normal = -normal;
         }
+        // self.normal = (self.normal + self.mat.get_normal(u, v)).unit();
     }
 }
 impl Default for HitRecord {

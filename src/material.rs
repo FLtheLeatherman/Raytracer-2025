@@ -1,8 +1,10 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
+use crate::interval::Interval;
 use crate::onb::ONB;
 use crate::pdf::{CosinePDF, PDF, SpherePDF};
 use crate::ray::Ray;
+use crate::rtw_stb_image::RtwImage;
 use crate::texture::{CheckerTexture, SolidColor, Texture};
 use crate::utility::{PI, random_double};
 use crate::vec3::{Vec3, random_cosine_direction};
@@ -12,8 +14,6 @@ use std::ops::Neg;
 use std::ptr::{null, null_mut};
 use std::slice::EscapeAscii;
 use std::sync::Arc;
-use crate::interval::Interval;
-use crate::rtw_stb_image::RtwImage;
 
 pub struct ScatterRecord {
     pub attenuation: Color,
@@ -42,6 +42,9 @@ pub trait Material: DynClone + Send + Sync {
     }
     fn get_normal(&self, u: f64, v: f64) -> Vec3 {
         Vec3::new(0.0, 0.0, 0.0)
+    }
+    fn get_alpha(&self, u: f64, v: f64) -> f64 {
+        1.0
     }
 }
 
@@ -223,26 +226,56 @@ impl Material for MappedMaterial {
         self.base_material.scatter(r_in, rec, srec)
     }
     fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
-        self.base_material.emitted(r_in, rec, u, v, p)
+        match &self.light_map {
+            Some(image_data) => {
+                let u = Interval::new(0.0, 1.0).clamp(rec.u);
+                let v = 1.0 - Interval::new(0.0, 1.0).clamp(rec.v);
+                let i = (image_data.image_width as f64 * u) as usize;
+                let j = (image_data.image_height as f64 * v) as usize;
+                let pixel = image_data.pixel_data(i, j);
+                let color = Vec3::new(
+                    pixel[0] as f64 / 255.99,
+                    pixel[1] as f64 / 255.99,
+                    pixel[2] as f64 / 255.99,
+                );
+                color * self.emissive_strength
+            }
+            None => self.base_material.emitted(r_in, rec, u, v, p),
+        }
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         self.base_material.scattering_pdf(r_in, rec, scattered)
     }
     fn get_normal(&self, u: f64, v: f64) -> Vec3 {
-        match &self.normal_map {
+        Vec3::new(0.0, 0.0, 0.0)
+        // match &self.normal_map {
+        //     Some(image_data) => {
+        //         let u = Interval::new(0.0, 1.0).clamp(u);
+        //         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+        //         let i = (image_data.image_width as f64 * u) as usize;
+        //         let j = (image_data.image_height as f64 * v) as usize;
+        //         let pixel = image_data.pixel_data(i, j);
+        //         Vec3::new(
+        //             (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
+        //             (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
+        //             (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
+        //         )
+        //     }
+        //     None => Vec3::new(0.0, 0.0, 0.0),
+        // }
+    }
+    fn get_alpha(&self, u: f64, v: f64) -> f64 {
+        match &self.alpha_map {
             Some(image_data) => {
                 let u = Interval::new(0.0, 1.0).clamp(u);
                 let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
                 let i = (image_data.image_width as f64 * u) as usize;
                 let j = (image_data.image_height as f64 * v) as usize;
                 let pixel = image_data.pixel_data(i, j);
-                Vec3::new(
-                    (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
-                    (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
-                    (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
-                )
+                let alpha = pixel[0] as f64 / 255.99;
+                alpha
             }
-            None => Vec3::new(0.0, 0.0, 0.0),
+            None => 1.0,
         }
     }
 }
