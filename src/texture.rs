@@ -5,6 +5,20 @@ use crate::rtw_stb_image::RtwImage;
 use crate::vec3::Vec3;
 use std::sync::Arc;
 
+#[derive(Default)]
+pub struct UV {
+    pub u: Vec3,
+    pub v: Vec3,
+}
+impl UV {
+    pub fn new(u: Vec3, v: Vec3) -> Self {
+        Self { u, v }
+    }
+    pub fn get_uv(&self, coef: Vec3) -> (f64, f64) {
+        (self.u.dot(&coef), self.v.dot(&coef))
+    }
+}
+
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Color;
 }

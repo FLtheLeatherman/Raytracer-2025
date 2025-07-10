@@ -13,12 +13,15 @@ pub struct RtwImage {
 impl RtwImage {
     pub fn new(image_filename: &str) -> Self {
         let filename = image_filename;
-        let imagedir = std::env::var("RTW_IMAGES").unwrap_or_else(|_| String::from("images"));
+        let imagedir = std::env::var("RTW_IMAGES").unwrap_or_else(|_| String::from("assets"));
         let mut _self = Self::default();
         if !imagedir.is_empty() && _self.load(&format!("{}/{}", imagedir, filename)) {
             return _self;
         }
         if _self.load(filename) {
+            return _self;
+        }
+        if _self.load(&format!("assets/{}", filename)) {
             return _self;
         }
         if _self.load(&format!("images/{}", filename)) {

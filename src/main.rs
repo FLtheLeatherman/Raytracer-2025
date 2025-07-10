@@ -502,7 +502,7 @@ use vec3::Vec3;
 //     cam.initialize();
 //     cam.render(&world, path);
 // }
-fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) {
+fn book2_final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) {
     let mut boxes1 = HittableList::new();
     let ground = Arc::new(Lambertian::new(Color::new(0.48, 0.83, 0.53)));
     let boxes_per_size = 20;
@@ -734,7 +734,7 @@ fn book3_cornell_box() {
     cam.render(&world_arc, &lights_arc, path);
 }
 fn obj_test() {
-    let mut world = load_model("cornell_box.obj");
+    let mut world = load_model("cornell_box.obj", 1.0);
     let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
     world.add(Arc::new(Quad::new(
         &Vec3::new(213.0, 548.0, 227.0),
@@ -756,7 +756,7 @@ fn obj_test() {
     let mut cam: Camera = Camera::new(
         1.0,
         600,
-        1000,
+        10,
         50,
         40.0,
         lookfrom,
@@ -806,7 +806,7 @@ fn normal_mapping_test() {
         Arc::new(light),
     )));
     let mut white_image1 = MappedMaterial::new(Arc::new(white));
-    white_image1.set_normal("images/normal_mapping1.jpg");
+    white_image1.set_normal("normal_mapping1.jpg");
     world.add(Arc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(555.0, 0.0, 0.0),
@@ -821,7 +821,7 @@ fn normal_mapping_test() {
         Arc::new(white),
     )));
     let mut blue_image2 = MappedMaterial::new(Arc::new(blue));
-    blue_image2.set_normal("images/normal_mapping2.jpg");
+    blue_image2.set_normal("normal_mapping2.jpg");
     world.add(Arc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 555.0),
         &Vec3::new(555.0, 0.0, 0.0),
@@ -902,7 +902,7 @@ fn all_mapping_test() {
         Arc::new(light),
     )));
     let mut white_image1 = MappedMaterial::new(Arc::new(white));
-    white_image1.set_normal("images/normal_mapping1.jpg");
+    white_image1.set_normal("normal_mapping1.jpg");
     world.add(Arc::new(Quad::new(
         &Vec3::new(0.0, 0.0, 0.0),
         &Vec3::new(555.0, 0.0, 0.0),
@@ -917,14 +917,14 @@ fn all_mapping_test() {
         Arc::new(white),
     )));
     let mut blue_image = MappedMaterial::new(Arc::new(blue));
-    blue_image.set_alpha("images/alpha_mapping.png");
+    blue_image.set_alpha("alpha_mapping.png");
     world.add(Arc::new(Quad::new(
         &Vec3::new(555.0, 0.0, 554.9),
         &Vec3::new(-555.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
         Arc::new(blue_image),
     )));
-    let genshin = Lambertian::new_tex(Arc::new(ImageTexture::new("images/genshin.jpg")));
+    let genshin = Lambertian::new_tex(Arc::new(ImageTexture::new("genshin.jpg")));
     world.add(Arc::new(Quad::new(
         &Vec3::new(555.0, 0.0, 555.0),
         &Vec3::new(-555.0, 0.0, 0.0),
@@ -933,7 +933,7 @@ fn all_mapping_test() {
     )));
     let tmp = Metal::new(Color::new(1.0, 1.0, 1.0), 0.5);
     let mut light2 = MappedMaterial::new(Arc::new(tmp));
-    light2.set_light("images/light_mapping2.png", 2.0);
+    light2.set_light("light_mapping2.png", 2.0);
     world.add(Arc::new(Sphere::new(
         Vec3::new(190.0, 90.0, 190.0),
         90.0,
@@ -962,14 +962,108 @@ fn all_mapping_test() {
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
     cam.render(&world_arc, &lights_arc, path);
 }
+fn final_scene() {
+    let mut world = HittableList::new();
+    let mut lights = HittableList::new();
+    // light
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(green),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(red),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 554.0, 227.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        Arc::new(light),
+    )));
+    let empty_material = Lambertian::new(Color::default());
+    lights.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 554.0, 227.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        Arc::new(empty_material),
+    )));
+    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 0.2, 227.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        Arc::new(light),
+    )));
+    let empty_material = Lambertian::new(Color::default());
+    lights.add(Arc::new(Quad::new(
+        &Vec3::new(213.0, 0.2, 227.0),
+        &Vec3::new(0.0, 0.0, 105.0),
+        &Vec3::new(130.0, 0.0, 0.0),
+        Arc::new(empty_material),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        Arc::new(white),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(0.0, 0.0, 555.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        Arc::new(white),
+    )));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(555.0, 0.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        Arc::new(white),
+    )));
+    let amiya = load_model("amiya.obj", 2.8);
+    let amiya = RotateY::new(Arc::new(amiya), 180.0);
+    let amiya = Translate::new(Arc::new(amiya), Vec3::new(275.0, 0.5, 380.0));
+    world.add(Arc::new(amiya));
+    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
+    let lookat = Vec3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let mut cam: Camera = Camera::new(
+        1.0,
+        600,
+        1000,
+        50,
+        40.0,
+        lookfrom,
+        lookat,
+        vup,
+        0.0,
+        10.0,
+        Color::new(0.0, 0.0, 0.0),
+    );
+    let path = std::path::Path::new("output/final_test.png");
+    cam.initialize();
+    let world_arc: Arc<dyn Hittable> = Arc::new(world);
+    let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
+    cam.render(&world_arc, &lights_arc, path);
+}
 fn main() {
     let start = Instant::now();
-    let a = 3;
+    let a = 0;
     match a {
+        0 => final_scene(),
         1 => obj_test(),
         2 => normal_mapping_test(),
         3 => all_mapping_test(),
-        9 => final_scene(800, 10000, 40),
+        9 => book2_final_scene(800, 10000, 40),
         10 => book3_cornell_box(),
         _ => (),
     }

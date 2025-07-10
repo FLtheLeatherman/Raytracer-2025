@@ -4,6 +4,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::texture::UV;
 use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
 use stb_image::image::load_with_depth;
@@ -19,9 +20,10 @@ pub struct Triangle {
     normal: Vec3,
     d: f64,
     area: f64,
+    uv: UV,
 }
 impl Triangle {
-    pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
+    pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>, uv: UV) -> Self {
         let bbox_diagonal1 = AABB::new_points(q, &(*q + *u));
         let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
         let n = u.cross(v);
@@ -36,6 +38,7 @@ impl Triangle {
             normal,
             d: normal.dot(q),
             area: n.length() / 2.0,
+            uv,
         }
     }
     fn is_interior(a: f64, b: f64, rec: &mut HitRecord) -> bool {
@@ -71,8 +74,8 @@ impl Hittable for Triangle {
         rec.t = t;
         rec.p = intersection;
         rec.mat = self.mat.clone();
-        rec.u = alpha;
-        rec.v = beta;
+        let coef = Vec3::new(alpha, beta, 1.0 - alpha - beta);
+        (rec.u, rec.v) = self.uv.get_uv(coef);
         rec.set_face_normal(r, self.normal, alpha, beta);
         if random_double() > self.mat.get_alpha(alpha, beta) {
             return false;
