@@ -43,12 +43,11 @@ impl HitRecord {
         let normal = outward_normal + self.mat.get_normal(u, v);
         if Vec3::dot(&r.direction, &normal) < 0.0 {
             self.front_face = true;
-            self.normal = normal;
+            self.normal = normal.unit();
         } else {
             self.front_face = false;
-            self.normal = -normal;
+            self.normal = -normal.unit();
         }
-        // self.normal = (self.normal + self.mat.get_normal(u, v)).unit();
     }
 }
 impl Default for HitRecord {

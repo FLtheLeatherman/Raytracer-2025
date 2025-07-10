@@ -868,7 +868,7 @@ fn normal_mapping_test() {
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
     cam.render(&world_arc, &lights_arc, path);
 }
-fn mapping_test() {
+fn all_mapping_test() {
     let mut world = HittableList::new();
     let mut lights = HittableList::new();
     let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
@@ -924,22 +924,13 @@ fn mapping_test() {
         &Vec3::new(0.0, 555.0, 0.0),
         Arc::new(blue_image),
     )));
-    let white = Lambertian::new_tex(Arc::new(ImageTexture::new("images/genshin.jpg")));
+    let genshin = Lambertian::new_tex(Arc::new(ImageTexture::new("images/genshin.jpg")));
     world.add(Arc::new(Quad::new(
         &Vec3::new(555.0, 0.0, 555.0),
         &Vec3::new(-555.0, 0.0, 0.0),
         &Vec3::new(0.0, 555.0, 0.0),
-        Arc::new(white),
+        Arc::new(genshin),
     )));
-    // let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
-    // let box1 = make_box(
-    //     &Vec3::new(0.0, 0.0, 0.0),
-    //     &Vec3::new(165.0, 330.0, 165.0),
-    //     Arc::new(white),
-    // );
-    // let box1 = Arc::new(RotateY::new(box1, 15.0));
-    // let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
-    // world.add(box1);
     let tmp = Metal::new(Color::new(1.0, 1.0, 1.0), 0.5);
     let mut light2 = MappedMaterial::new(Arc::new(tmp));
     light2.set_light("images/light_mapping2.png", 2.0);
@@ -948,6 +939,7 @@ fn mapping_test() {
         90.0,
         Arc::new(light2),
     )));
+    // let mut world = bvh::BvhNode::new_list(&mut world);
     let lookfrom = Vec3::new(278.0, 278.0, -800.0);
     let lookat = Vec3::new(278.0, 278.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
@@ -964,7 +956,7 @@ fn mapping_test() {
         10.0,
         Color::new(0.0, 0.0, 0.0),
     );
-    let path = std::path::Path::new("output/test_mapping.png");
+    let path = std::path::Path::new("output/test_mapping_all.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
@@ -976,7 +968,7 @@ fn main() {
     match a {
         1 => obj_test(),
         2 => normal_mapping_test(),
-        3 => mapping_test(),
+        3 => all_mapping_test(),
         9 => final_scene(800, 10000, 40),
         10 => book3_cornell_box(),
         _ => (),

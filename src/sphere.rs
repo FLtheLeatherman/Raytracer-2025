@@ -76,8 +76,8 @@ impl Hittable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - current_center) / self.radius;
         (rec.u, rec.v) = Self::get_sphere_uv(&outward_normal);
-        rec.set_face_normal(r, outward_normal, rec.u, rec.v);
         rec.mat = self.mat.clone();
+        rec.set_face_normal(r, outward_normal, rec.u, rec.v);
         if random_double() > self.mat.get_alpha(rec.u, rec.v) {
             return false;
         }

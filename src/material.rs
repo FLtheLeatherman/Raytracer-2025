@@ -247,22 +247,22 @@ impl Material for MappedMaterial {
         self.base_material.scattering_pdf(r_in, rec, scattered)
     }
     fn get_normal(&self, u: f64, v: f64) -> Vec3 {
-        Vec3::new(0.0, 0.0, 0.0)
-        // match &self.normal_map {
-        //     Some(image_data) => {
-        //         let u = Interval::new(0.0, 1.0).clamp(u);
-        //         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
-        //         let i = (image_data.image_width as f64 * u) as usize;
-        //         let j = (image_data.image_height as f64 * v) as usize;
-        //         let pixel = image_data.pixel_data(i, j);
-        //         Vec3::new(
-        //             (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
-        //             (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
-        //             (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
-        //         )
-        //     }
-        //     None => Vec3::new(0.0, 0.0, 0.0),
-        // }
+        match &self.normal_map {
+            Some(image_data) => {
+                let u = Interval::new(0.0, 1.0).clamp(u);
+                let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+                let i = (image_data.image_width as f64 * u) as usize;
+                let j = (image_data.image_height as f64 * v) as usize;
+                let pixel = image_data.pixel_data(i, j);
+                let res = Vec3::new(
+                    (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
+                    (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
+                );
+                res
+            }
+            None => Vec3::new(0.0, 0.0, 0.0),
+        }
     }
     fn get_alpha(&self, u: f64, v: f64) -> f64 {
         match &self.alpha_map {
