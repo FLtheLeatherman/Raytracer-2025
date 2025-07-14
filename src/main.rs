@@ -31,14 +31,16 @@ use crate::hittable::{RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, MappedMaterial, Metal};
 use crate::obj::load_model;
 use crate::quad::{Quad, make_box};
-use crate::texture::{ImageTexture, NoiseTexture};
+use crate::texture::{ImageTexture, NoiseTexture, SolidColor, UV};
 use crate::triangle::Triangle;
-use crate::utility::random_double_range;
+use crate::utility::{degrees_to_radians, random_double, random_double_range};
 use hittable::Hittable;
 use hittable_list::HittableList;
+use image::error::LimitErrorKind::DimensionError;
 use sphere::Sphere;
 use std::sync::Arc;
 use std::time::Instant;
+use tobj::LoadError::MaterialParseError;
 use vec3::Vec3;
 
 // fn bouncing_spheres() {
@@ -917,7 +919,7 @@ fn all_mapping_test() {
         Arc::new(white),
     )));
     let mut blue_image = MappedMaterial::new(Arc::new(blue));
-    blue_image.set_alpha("alpha_mapping.png");
+    blue_image.set_alpha("alpha_mapping1.png");
     world.add(Arc::new(Quad::new(
         &Vec3::new(555.0, 0.0, 554.9),
         &Vec3::new(-555.0, 0.0, 0.0),
@@ -965,80 +967,298 @@ fn all_mapping_test() {
 fn final_scene() {
     let mut world = HittableList::new();
     let mut lights = HittableList::new();
-    // light
-    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
-    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
-    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+
+    // 灯
+    let light = Arc::new(DiffuseLight::new(&Color::new(18.0, 18.0, 18.0)));
     world.add(Arc::new(Quad::new(
-        &Vec3::new(555.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 555.0),
-        &Vec3::new(0.0, 555.0, 0.0),
-        Arc::new(green),
+        &Vec3::new(163.0, 654.0, 177.0),
+        &Vec3::new(230.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 205.0),
+        light.clone(),
     )));
-    world.add(Arc::new(Quad::new(
-        &Vec3::new(0.0, 0.0, 555.0),
-        &Vec3::new(0.0, 0.0, -555.0),
-        &Vec3::new(0.0, 555.0, 0.0),
-        Arc::new(red),
-    )));
-    world.add(Arc::new(Quad::new(
-        &Vec3::new(213.0, 554.0, 227.0),
-        &Vec3::new(130.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 105.0),
-        Arc::new(light),
-    )));
-    let empty_material = Lambertian::new(Color::default());
+    let empty_material = Arc::new(Lambertian::new(Color::default()));
     lights.add(Arc::new(Quad::new(
-        &Vec3::new(213.0, 554.0, 227.0),
-        &Vec3::new(130.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 105.0),
-        Arc::new(empty_material),
+        &Vec3::new(163.0, 654.0, 177.0),
+        &Vec3::new(230.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 205.0),
+        empty_material.clone(),
     )));
-    let light = DiffuseLight::new(&Color::new(15.0, 15.0, 15.0));
+
+    // 地板
+    let white = Arc::new(Lambertian::new(Color::new(
+        188.0 / 255.99,
+        122.0 / 255.99,
+        122.0 / 255.99,
+    )));
+    let mut _brown = MappedMaterial::new(white.clone());
+    _brown.set_normal("normal_mapping3.jpg");
+    let _brown = Arc::new(_brown);
     world.add(Arc::new(Quad::new(
-        &Vec3::new(213.0, 0.2, 227.0),
-        &Vec3::new(0.0, 0.0, 105.0),
-        &Vec3::new(130.0, 0.0, 0.0),
-        Arc::new(light),
-    )));
-    let empty_material = Lambertian::new(Color::default());
-    lights.add(Arc::new(Quad::new(
-        &Vec3::new(213.0, 0.2, 227.0),
-        &Vec3::new(0.0, 0.0, 105.0),
-        &Vec3::new(130.0, 0.0, 0.0),
-        Arc::new(empty_material),
+        &Vec3::new(-100.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        _brown.clone(),
     )));
     world.add(Arc::new(Quad::new(
-        &Vec3::new(0.0, 555.0, 0.0),
-        &Vec3::new(555.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 555.0),
-        Arc::new(white),
+        &Vec3::new(-100.0 - 755.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        _brown.clone(),
     )));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     world.add(Arc::new(Quad::new(
-        &Vec3::new(0.0, 0.0, 555.0),
-        &Vec3::new(555.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, -555.0),
-        Arc::new(white),
+        &Vec3::new(-100.0 + 755.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        _brown.clone(),
     )));
-    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+
+    // 墙
+    let white = Arc::new(Lambertian::new(Color::new(0.4, 0.02, 0.07)));
+    let mut _brown = MappedMaterial::new(white.clone());
+    _brown.set_normal("normal_mapping1.jpg");
+    let _brown = Arc::new(_brown);
     world.add(Arc::new(Quad::new(
-        &Vec3::new(555.0, 0.0, 555.0),
-        &Vec3::new(-555.0, 0.0, 0.0),
-        &Vec3::new(0.0, 555.0, 0.0),
-        Arc::new(white),
+        &Vec3::new(-100.0, 0.0, 100.0 + 755.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 755.0, 0.0),
+        _brown.clone(),
     )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-100.0 - 755.0, 0.0, 100.0 + 755.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 755.0, 0.0),
+        _brown.clone(),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-100.0 + 755.0, 0.0, 100.0 + 755.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 755.0, 0.0),
+        _brown.clone(),
+    )));
+
+    // 墙上线索
+    let clue1 = ImageTexture::new("1.png");
+    let clue1 = Lambertian::new_tex(Arc::new(clue1));
+    let clue3 = ImageTexture::new("3.png");
+    let clue3 = Lambertian::new_tex(Arc::new(clue3));
+    let clue6 = ImageTexture::new("6.png");
+    let clue6 = Lambertian::new_tex(Arc::new(clue6));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-275.0, 150.0, 100.0 + 754.9),
+        &Vec3::new(-100.0, 0.0, 0.0),
+        &Vec3::new(0.0, 150.0, 0.0),
+        Arc::new(clue1),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-305.0, 325.0, 100.0 + 754.9),
+        &Vec3::new(-100.0, 0.0, 0.0),
+        &Vec3::new(0.0, 150.0, 0.0),
+        Arc::new(clue3),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-355.0, 200.0, 100.0 + 754.9),
+        &Vec3::new(-100.0, 0.0, 0.0),
+        &Vec3::new(0.0, 150.0, 0.0),
+        Arc::new(clue6),
+    )));
+
+    // 水坑
+    let tmp = Arc::new(Metal::new(Color::new(0.73, 0.73, 0.73), 0.01));
+    let mut tmp = MappedMaterial::new(tmp);
+    tmp.set_alpha("alpha_mapping2.png");
+    let tmp = Arc::new(tmp);
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-100.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        tmp.clone(),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-100.0 - 755.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        tmp.clone(),
+    )));
+    world.add(Arc::new(Quad::new(
+        &Vec3::new(-100.0 + 755.0, 0.0, 100.0),
+        &Vec3::new(755.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 755.0),
+        tmp.clone(),
+    )));
+
+    // Raytracer 标识
+    let white = Arc::new(Dielectric::new(1.0));
+    let mut _light = MappedMaterial::new(white.clone());
+    _light.set_light("light_mapping3.png", 1.5);
+    let dengpai = Quad::new(
+        &Vec3::new(
+            80.0 + 159.37,
+            50.0,
+            465.0 + 205.0 * degrees_to_radians(18.0).sin() - 9.75,
+        ),
+        &Vec3::new(
+            205.0 * -degrees_to_radians(18.0).cos(),
+            0.0,
+            205.0 * -degrees_to_radians(18.0).sin(),
+        ),
+        &Vec3::new(0.0, 70.0, 0.0),
+        Arc::new(_light),
+    );
+    world.add(Arc::new(dengpai));
+
+    // 阿米娅
     let amiya = load_model("amiya.obj", 2.8);
-    let amiya = RotateY::new(Arc::new(amiya), 180.0);
-    let amiya = Translate::new(Arc::new(amiya), Vec3::new(275.0, 0.5, 380.0));
+    let amiya = RotateY::new(Arc::new(amiya), 210.0);
+    let amiya = Translate::new(Arc::new(amiya), Vec3::new(475.0, 0.0, 580.0));
     world.add(Arc::new(amiya));
-    let lookfrom = Vec3::new(278.0, 278.0, -800.0);
-    let lookat = Vec3::new(278.0, 278.0, 0.0);
+
+    // 夕泡泡
+    let longpao = load_model("arknights_dusk_plush_doll.obj", 170.0);
+    let longpao = RotateY::new(Arc::new(longpao), 135.0);
+    let longpao = Translate::new(Arc::new(longpao), Vec3::new(100.0, 165.0, 545.0));
+    world.add(Arc::new(longpao));
+
+    // 斯卡蒂
+    let sakaban = load_model("skadi.obj", 2.0);
+    let sakaban = RotateY::new(Arc::new(sakaban), 240.0);
+    let sakaban = Translate::new(Arc::new(sakaban), Vec3::new(750.0, 50.0, 420.0));
+    world.add(Arc::new(sakaban));
+
+    // 无人机
+    let drone = load_model("drone.obj", 30.0);
+    let drone = RotateY::new(Arc::new(drone), 70.0);
+    let drone = Translate::new(Arc::new(drone), Vec3::new(780.0, 300.0, 550.0));
+    world.add(Arc::new(drone));
+
+    // 玻璃砖
+    let white = Dielectric::new(1.5);
+    let box2 = make_box(
+        &Vec3::new(0.0, 0.0, 0.0),
+        &Vec3::new(200.0, 165.0, 165.0),
+        Arc::new(white),
+    );
+    let box2 = Arc::new(RotateY::new(box2, -18.0));
+    let box2 = Arc::new(Translate::new(
+        box2,
+        Vec3::new(80.0 - 33.8, 0.0, 465.0 - 9.06),
+    ));
+    world.add(box2);
+
+    // 雨
+    let mut rain = HittableList::new();
+    for i in 0..100 {
+        let center: Vec3 = Vec3::new(
+            random_double_range(-500.0, 1055.0),
+            random_double_range(100.0, 555.0),
+            random_double_range(100.0, 855.0),
+        );
+        let albedo = Color::new(0.73, 0.73, 0.73);
+        let sphere_material = Lambertian::new(albedo);
+        let center2 = center + Vec3::new(0.0, random_double_range(20.0, 40.0), 0.0);
+        rain.add(Arc::new(Sphere::new_dyn(
+            center,
+            center2,
+            2.5,
+            Arc::new(sphere_material),
+        )));
+    }
+    let rain = BvhNode::new_list(&mut rain);
+    world.add(Arc::new(rain));
+
+    // 右侧若干球
+    let glass = Arc::new(Dielectric::new(1.5));
+    let mut light = MappedMaterial::new(glass.clone());
+    light.set_light("light_mapping2.png", 1.0);
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(-130.0, 87.13 + 65.0, 340.0 - 75.05),
+        50.0,
+        Arc::new(light),
+    )));
+    let metal = Arc::new(Metal::new(Color::new(0.1, 0.5, 0.1), 0.4));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(-130.0, 65.0, 340.0),
+        65.0,
+        metal.clone(),
+    )));
+    let metal = Arc::new(Metal::new(Color::new(0.1, 0.1, 0.5), 0.4));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(
+            -130.0 - 130.0 * degrees_to_radians(60.0).cos(),
+            65.0,
+            340.0 - 130.0 * degrees_to_radians(60.0).sin(),
+        ),
+        65.0,
+        metal.clone(),
+    )));
+    let metal = Arc::new(Metal::new(Color::new(0.5, 0.5, 0.1), 0.4));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(
+            -130.0 + 130.0 * degrees_to_radians(60.0).cos(),
+            65.0,
+            340.0 - 130.0 * degrees_to_radians(60.0).sin(),
+        ),
+        65.0,
+        metal.clone(),
+    )));
+
+    // 斯卡蒂左侧球
+    let moon = Lambertian::new(Color::new(0.0, 0.0, 0.0));
+    let mut moon = MappedMaterial::new(Arc::new(moon));
+    moon.set_light("moon.png", 1.0);
+    let moon = Arc::new(Sphere::new(Vec3::new(0.0, 0.0, 0.0), 40.0, Arc::new(moon)));
+    let moon = Arc::new(RotateY::new(moon, 180.0));
+    let moon = Arc::new(Translate::new(moon, Vec3::new(880.0, 40.0, 350.0)));
+    world.add(moon);
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(800.0, 36.0, 300.0),
+        36.0,
+        glass.clone(),
+    )));
+
+    // 斯卡蒂右侧
+    let mat = Arc::new(Lambertian::new(Color::new(0.6, 0.07, 0.45)));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(675.0, 15.0, 320.0),
+        15.0,
+        mat.clone(),
+    )));
+    let mat = Arc::new(DiffuseLight::new(&Color::new(1.0, 0.7, 0.8)));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(660.0, 15.0, 350.0),
+        15.0,
+        mat.clone(),
+    )));
+    let mat = Arc::new(Lambertian::new(Color::new(0.6, 0.07, 0.07)));
+    world.add(Arc::new(Sphere::new(
+        Vec3::new(615.0, 15.0, 335.0),
+        15.0,
+        mat.clone(),
+    )));
+    let mat = Arc::new(Lambertian::new(Vec3::new(0.6, 0.85, 0.9)));
+    let box1 = make_box(
+        &Vec3::new(-15.0, -15.0, -15.0),
+        &Vec3::new(15.0, 15.0, 15.0),
+        mat.clone(),
+    );
+    let box1 = RotateY::new(box1, 150.0);
+    let box1 = Translate::new(Arc::new(box1), Vec3::new(645.0, 15.0, 275.0));
+    world.add(Arc::new(box1));
+    let mat = Arc::new(Metal::new(Vec3::new(0.9, 0.85, 0.2), 0.7));
+    let box1 = make_box(
+        &Vec3::new(-15.0, -15.0, -15.0),
+        &Vec3::new(15.0, 15.0, 15.0),
+        mat.clone(),
+    );
+    let box1 = RotateY::new(box1, 210.0);
+    let box1 = Translate::new(Arc::new(box1), Vec3::new(630.0, 15.0, 385.0));
+    world.add(Arc::new(box1));
+
+    let lookfrom = Vec3::new(278.0, 600.0, -600.0);
+    let lookat = Vec3::new(278.0, 278.0, 260.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let mut cam: Camera = Camera::new(
-        1.0,
-        600,
+        16.0 / 9.0,
+        1600,
         1000,
         50,
         40.0,
@@ -1046,10 +1266,10 @@ fn final_scene() {
         lookat,
         vup,
         0.0,
-        10.0,
-        Color::new(0.0, 0.0, 0.0),
+        1500.0,
+        Color::new(0.01, 0.01, 0.01),
     );
-    let path = std::path::Path::new("output/final_test.png");
+    let path = std::path::Path::new("output/final_test2.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);

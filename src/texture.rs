@@ -5,7 +5,6 @@ use crate::rtw_stb_image::RtwImage;
 use crate::vec3::Vec3;
 use std::sync::Arc;
 
-#[derive(Default)]
 pub struct UV {
     pub u: Vec3,
     pub v: Vec3,
@@ -16,6 +15,14 @@ impl UV {
     }
     pub fn get_uv(&self, coef: Vec3) -> (f64, f64) {
         (self.u.dot(&coef), self.v.dot(&coef))
+    }
+}
+impl Default for UV {
+    fn default() -> Self {
+        Self {
+            u: Vec3::new(0.0, 1.0, 0.0),
+            v: Vec3::new(0.0, 0.0, 1.0),
+        }
     }
 }
 

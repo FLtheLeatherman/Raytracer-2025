@@ -23,6 +23,24 @@ pub struct Triangle {
     uv: UV,
 }
 impl Triangle {
+    pub fn new_default(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
+        let bbox_diagonal1 = AABB::new_points(q, &(*q + *u));
+        let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
+        let n = u.cross(v);
+        let normal = n.unit();
+        Self {
+            q: *q,
+            u: *u,
+            v: *v,
+            w: n / n.dot(&n),
+            mat: mat.clone(),
+            bbox: AABB::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
+            normal,
+            d: normal.dot(q),
+            area: n.length() / 2.0,
+            uv: UV::new(Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 1.0)),
+        }
+    }
     pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>, uv: UV) -> Self {
         let bbox_diagonal1 = AABB::new_points(q, &(*q + *u));
         let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
