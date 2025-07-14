@@ -1259,7 +1259,7 @@ fn final_scene() {
     let mut cam: Camera = Camera::new(
         16.0 / 9.0,
         1600,
-        1000,
+        5000,
         50,
         40.0,
         lookfrom,
@@ -1269,7 +1269,7 @@ fn final_scene() {
         1500.0,
         Color::new(0.01, 0.01, 0.01),
     );
-    let path = std::path::Path::new("output/final_test2.png");
+    let path = std::path::Path::new("output/final_scene.png");
     cam.initialize();
     let world_arc: Arc<dyn Hittable> = Arc::new(world);
     let lights_arc: Arc<dyn Hittable> = Arc::new(lights);
