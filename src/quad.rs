@@ -1,13 +1,11 @@
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::rtw_stb_image::RtwImage;
 use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
-use stb_image::image::load_with_depth;
 use std::sync::Arc;
 
 pub struct Quad {
@@ -16,15 +14,15 @@ pub struct Quad {
     v: Vec3,
     w: Vec3,
     mat: Arc<dyn Material>,
-    bbox: AABB,
+    bbox: Aabb,
     normal: Vec3,
     d: f64,
     area: f64,
 }
 impl Quad {
     pub fn new(q: &Vec3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
-        let bbox_diagonal1 = AABB::new_points(q, &(*q + *u + *v));
-        let bbox_diagonal2 = AABB::new_points(&(*q + *u), &(*q + *v));
+        let bbox_diagonal1 = Aabb::new_points(q, &(*q + *u + *v));
+        let bbox_diagonal2 = Aabb::new_points(&(*q + *u), &(*q + *v));
         let n = u.cross(v);
         let normal = n.unit();
         Self {
@@ -33,7 +31,7 @@ impl Quad {
             v: *v,
             w: n / n.dot(&n),
             mat: mat.clone(),
-            bbox: AABB::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
+            bbox: Aabb::new_aabb(&bbox_diagonal1, &bbox_diagonal2),
             normal,
             d: normal.dot(q),
             area: n.length(),
@@ -75,7 +73,7 @@ impl Hittable for Quad {
         }
         true
     }
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bbox
     }
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {

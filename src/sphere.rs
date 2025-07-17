@@ -1,8 +1,8 @@
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
-use crate::onb::ONB;
+use crate::onb::Onb;
 use crate::ray::Ray;
 use crate::utility::{INFINITY, PI, random_double};
 use crate::vec3::Vec3;
@@ -12,7 +12,7 @@ pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
     pub mat: Arc<dyn Material>,
-    pub bbox: AABB,
+    pub bbox: Aabb,
 }
 
 impl Sphere {
@@ -22,19 +22,19 @@ impl Sphere {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius,
             mat: mat.clone(),
-            bbox: AABB::new_points(&(static_center - rvec), &(static_center + rvec)),
+            bbox: Aabb::new_points(&(static_center - rvec), &(static_center + rvec)),
         }
     }
     pub fn new_dyn(center1: Vec3, center2: Vec3, radius: f64, mat: Arc<dyn Material>) -> Sphere {
         let _center = Ray::new(center1, center2 - center1);
         let rvec = Vec3::new(radius, radius, radius);
-        let box1 = AABB::new_points(&(_center.at(0.0) - rvec), &(_center.at(0.0) + rvec));
-        let box2 = AABB::new_points(&(_center.at(1.0) - rvec), &(_center.at(1.0) + rvec));
+        let box1 = Aabb::new_points(&(_center.at(0.0) - rvec), &(_center.at(0.0) + rvec));
+        let box2 = Aabb::new_points(&(_center.at(1.0) - rvec), &(_center.at(1.0) + rvec));
         Sphere {
             center: _center,
             radius,
             mat: mat.clone(),
-            bbox: AABB::new_aabb(&box1, &box2),
+            bbox: Aabb::new_aabb(&box1, &box2),
         }
     }
     pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
@@ -83,7 +83,7 @@ impl Hittable for Sphere {
         }
         true
     }
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bbox
     }
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {
@@ -98,12 +98,12 @@ impl Hittable for Sphere {
         let dist_squared = (self.center.at(0.0) - *origin).squared_length();
         let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared).sqrt();
         let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
-        return 1.0 / solid_angle;
+        1.0 / solid_angle
     }
     fn random(&self, origin: &Vec3) -> Vec3 {
         let direction = self.center.at(0.0) - *origin;
         let distance_squared = direction.squared_length();
-        let uvw = ONB::new(&direction);
+        let uvw = Onb::new(&direction);
         uvw.transform(&Self::random_to_sphere(self.radius, distance_squared))
     }
 }

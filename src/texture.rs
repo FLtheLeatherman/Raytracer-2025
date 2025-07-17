@@ -36,14 +36,14 @@ impl SolidColor {
     pub fn new_color(albedo: &Color) -> Self {
         Self { albedo: *albedo }
     }
-    pub fn new_rgb(red: f64, green: f64, blue: f64) -> Self {
-        Self {
-            albedo: Color::new(red, green, blue),
-        }
-    }
+    // pub fn new_rgb(red: f64, green: f64, blue: f64) -> Self {
+    //     Self {
+    //         albedo: Color::new(red, green, blue),
+    //     }
+    // }
 }
 impl Texture for SolidColor {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: &Vec3) -> Color {
         self.albedo
     }
 }
@@ -53,20 +53,20 @@ pub struct CheckerTexture {
     odd: Arc<dyn Texture>,
 }
 impl CheckerTexture {
-    pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
-        Self {
-            inv_scale: 1.0 / scale,
-            even,
-            odd,
-        }
-    }
-    pub fn new_color(scale: f64, c1: &Color, c2: &Color) -> Self {
-        Self {
-            inv_scale: 1.0 / scale,
-            even: Arc::new(SolidColor::new_color(c1)),
-            odd: Arc::new(SolidColor::new_color(c2)),
-        }
-    }
+    // pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
+    //     Self {
+    //         inv_scale: 1.0 / scale,
+    //         even,
+    //         odd,
+    //     }
+    // }
+    // pub fn new_color(scale: f64, c1: &Color, c2: &Color) -> Self {
+    //     Self {
+    //         inv_scale: 1.0 / scale,
+    //         even: Arc::new(SolidColor::new_color(c1)),
+    //         odd: Arc::new(SolidColor::new_color(c2)),
+    //     }
+    // }
 }
 impl Texture for CheckerTexture {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
@@ -93,7 +93,7 @@ impl ImageTexture {
     }
 }
 impl Texture for ImageTexture {
-    fn value(&self, mut u: f64, mut v: f64, p: &Vec3) -> Color {
+    fn value(&self, mut u: f64, mut v: f64, _p: &Vec3) -> Color {
         if self.image.height() == 0 {
             return Color::new(0.0, 1.0, 1.0);
         }
@@ -124,7 +124,7 @@ impl NoiseTexture {
     }
 }
 impl Texture for NoiseTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
+    fn value(&self, _u: f64, _v: f64, p: &Vec3) -> Color {
         Color::new(0.5, 0.5, 0.5)
             * (1.0 + f64::sin(self.scale * p.z + 10.0 * self.noise.turb(p, 7)))
     }

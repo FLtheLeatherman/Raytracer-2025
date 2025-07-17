@@ -1,6 +1,4 @@
-use crate::aabb::AABB;
 use crate::utility;
-use crate::vec3::Vec3;
 use std::ops::Add;
 
 #[derive(Copy, Clone)]

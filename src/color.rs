@@ -1,6 +1,6 @@
 use crate::interval::Interval;
 use crate::vec3::Vec3;
-use image::{ImageBuffer, RgbImage};
+use image::RgbImage;
 
 pub type Color = Vec3;
 

@@ -7,7 +7,6 @@ use crate::triangle::Triangle;
 use crate::vec3::Vec3;
 use std::path::Path;
 use std::sync::Arc;
-use tobj;
 
 pub fn load_model(obj_filename: &str, scale: f64) -> HittableList {
     let mut world = HittableList::new();

@@ -1,4 +1,4 @@
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
@@ -8,23 +8,23 @@ use std::sync::Arc;
 
 pub struct HittableList {
     pub objects: Vec<Arc<dyn Hittable>>,
-    bbox: AABB,
+    bbox: Aabb,
 }
 
 impl HittableList {
     pub fn new() -> HittableList {
         HittableList {
             objects: vec![],
-            bbox: AABB::default(),
+            bbox: Aabb::default(),
         }
     }
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
-        self.bbox = AABB::new_aabb(&self.bbox, &object.bounding_box());
+        self.bbox = Aabb::new_aabb(&self.bbox, &object.bounding_box());
         self.objects.push(object);
     }
-    pub fn clear(&mut self) {
-        self.objects.clear()
-    }
+    // pub fn clear(&mut self) {
+    //     self.objects.clear()
+    // }
 }
 
 impl Hittable for HittableList {
@@ -41,7 +41,7 @@ impl Hittable for HittableList {
         }
         hit_anything
     }
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bbox
     }
     fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {

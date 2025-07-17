@@ -1,10 +1,9 @@
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::color::Color;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::{INTERVAL_UNIVERSE, Interval};
 use crate::material::{Isotropic, Material};
 use crate::ray::Ray;
-use crate::texture::Texture;
 use crate::utility::{INFINITY, random_double};
 use crate::vec3::Vec3;
 use std::sync::Arc;
@@ -15,13 +14,13 @@ pub struct ConstantMedium {
     phase_function: Arc<dyn Material>,
 }
 impl ConstantMedium {
-    pub fn new(boundary: Arc<dyn Hittable>, density: f64, tex: Arc<dyn Texture>) -> Self {
-        Self {
-            boundary: boundary.clone(),
-            neg_inv_density: -1.0 / density,
-            phase_function: Arc::new(Isotropic::new_tex(tex)),
-        }
-    }
+    // pub fn new(boundary: Arc<dyn Hittable>, density: f64, tex: Arc<dyn Texture>) -> Self {
+    //     Self {
+    //         boundary: boundary.clone(),
+    //         neg_inv_density: -1.0 / density,
+    //         phase_function: Arc::new(Isotropic::new_tex(tex)),
+    //     }
+    // }
     pub fn new_color(boundary: Arc<dyn Hittable>, density: f64, albedo: &Color) -> Self {
         Self {
             boundary: boundary.clone(),
@@ -69,7 +68,7 @@ impl Hittable for ConstantMedium {
         true
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.boundary.bounding_box()
     }
 }

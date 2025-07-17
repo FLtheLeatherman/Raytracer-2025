@@ -1,11 +1,10 @@
-use crate::aabb::AABB;
+use crate::aabb::Aabb;
 use crate::color::Color;
 use crate::interval::Interval;
 use crate::material::{Lambertian, Material};
 use crate::ray::Ray;
 use crate::utility::{INFINITY, degrees_to_radians};
 use crate::vec3::Vec3;
-use console::StyledObject;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -66,11 +65,11 @@ impl Default for HitRecord {
 
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
-    fn bounding_box(&self) -> AABB;
-    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {
+    fn bounding_box(&self) -> Aabb;
+    fn pdf_value(&self, _origin: &Vec3, _direction: &Vec3) -> f64 {
         0.0
     }
-    fn random(&self, origin: &Vec3) -> Vec3 {
+    fn random(&self, _origin: &Vec3) -> Vec3 {
         Vec3::new(1.0, 0.0, 0.0)
     }
 }
@@ -78,7 +77,7 @@ pub trait Hittable: Send + Sync {
 pub struct Translate {
     object: Arc<dyn Hittable>,
     offset: Vec3,
-    bbox: AABB,
+    bbox: Aabb,
 }
 impl Translate {
     pub fn new(object: Arc<dyn Hittable>, offset: Vec3) -> Self {
@@ -98,7 +97,7 @@ impl Hittable for Translate {
         rec.p = rec.p + self.offset;
         true
     }
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bbox
     }
 }
@@ -106,7 +105,7 @@ pub struct RotateY {
     object: Arc<dyn Hittable>,
     sin_theta: f64,
     cos_theta: f64,
-    bbox: AABB,
+    bbox: Aabb,
 }
 impl RotateY {
     pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
@@ -134,7 +133,7 @@ impl RotateY {
                 }
             }
         }
-        bbox = AABB::new_points(&min, &max);
+        bbox = Aabb::new_points(&min, &max);
         Self {
             object,
             sin_theta,
@@ -171,7 +170,7 @@ impl Hittable for RotateY {
         );
         true
     }
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bbox
     }
 }

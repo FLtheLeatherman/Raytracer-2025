@@ -1,10 +1,10 @@
 use crate::hittable::Hittable;
-use crate::onb::ONB;
+use crate::onb::Onb;
 use crate::utility::{PI, random_double};
 use crate::vec3::{Vec3, random_cosine_direction};
 use std::sync::Arc;
 
-pub trait PDF {
+pub trait Pdf {
     fn value(&self, direction: &Vec3) -> f64;
     fn generate(&self) -> Vec3;
 }
@@ -15,8 +15,8 @@ impl SpherePDF {
         Self {}
     }
 }
-impl PDF for SpherePDF {
-    fn value(&self, direction: &Vec3) -> f64 {
+impl Pdf for SpherePDF {
+    fn value(&self, _direction: &Vec3) -> f64 {
         1.0 / (4.0 * PI)
     }
     fn generate(&self) -> Vec3 {
@@ -25,14 +25,14 @@ impl PDF for SpherePDF {
 }
 
 pub struct CosinePDF {
-    uvw: ONB,
+    uvw: Onb,
 }
 impl CosinePDF {
     pub fn new(w: &Vec3) -> Self {
-        Self { uvw: ONB::new(w) }
+        Self { uvw: Onb::new(w) }
     }
 }
-impl PDF for CosinePDF {
+impl Pdf for CosinePDF {
     fn value(&self, direction: &Vec3) -> f64 {
         let cosine_theta = direction.unit().dot(&self.uvw.w());
         (cosine_theta / PI).max(0.0)
@@ -54,7 +54,7 @@ impl HittablePDF {
         }
     }
 }
-impl PDF for HittablePDF {
+impl Pdf for HittablePDF {
     fn value(&self, direction: &Vec3) -> f64 {
         self.objects.pdf_value(&self.origin, direction)
     }
@@ -65,14 +65,14 @@ impl PDF for HittablePDF {
 }
 
 pub struct MixturePDF {
-    p: [Arc<dyn PDF>; 2],
+    p: [Arc<dyn Pdf>; 2],
 }
 impl MixturePDF {
-    pub fn new(p0: Arc<dyn PDF>, p1: Arc<dyn PDF>) -> Self {
+    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> Self {
         Self { p: [p0, p1] }
     }
 }
-impl PDF for MixturePDF {
+impl Pdf for MixturePDF {
     fn value(&self, direction: &Vec3) -> f64 {
         0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
     }

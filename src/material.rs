@@ -1,23 +1,19 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::interval::Interval;
-use crate::onb::ONB;
-use crate::pdf::{CosinePDF, PDF, SpherePDF};
+use crate::pdf::{CosinePDF, Pdf, SpherePDF};
 use crate::ray::Ray;
 use crate::rtw_stb_image::RtwImage;
-use crate::texture::{CheckerTexture, SolidColor, Texture};
+use crate::texture::{SolidColor, Texture};
 use crate::utility::{PI, random_double};
-use crate::vec3::{Vec3, random_cosine_direction};
+use crate::vec3::Vec3;
 use dyn_clone::DynClone;
-use rand::random;
 use std::ops::Neg;
-use std::ptr::{null, null_mut};
-use std::slice::EscapeAscii;
 use std::sync::Arc;
 
 pub struct ScatterRecord {
     pub attenuation: Color,
-    pub pdf_ptr: Arc<dyn PDF>,
+    pub pdf_ptr: Arc<dyn Pdf>,
     pub skip_pdf: bool,
     pub skip_pdf_ray: Ray,
 }
@@ -34,16 +30,16 @@ impl Default for ScatterRecord {
 
 pub trait Material: DynClone + Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool;
-    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
+    fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, _u: f64, _v: f64, _p: &Vec3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
-    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.0
     }
-    fn get_normal(&self, u: f64, v: f64) -> Vec3 {
+    fn get_normal(&self, _u: f64, _v: f64) -> Vec3 {
         Vec3::new(0.0, 0.0, 0.0)
     }
-    fn get_alpha(&self, u: f64, v: f64) -> f64 {
+    fn get_alpha(&self, _u: f64, _v: f64) -> f64 {
         1.0
     }
 }
@@ -65,13 +61,13 @@ impl Lambertian {
     }
 }
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         srec.attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         srec.pdf_ptr = Arc::new(CosinePDF::new(&rec.normal));
         srec.skip_pdf = false;
         true
     }
-    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cos_theta = rec.normal.dot(&scattered.direction.unit());
         if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
     }
@@ -118,22 +114,20 @@ impl Material for Dielectric {
         srec.attenuation = Color::new(1.0, 1.0, 1.0);
         srec.pdf_ptr = Arc::new(SpherePDF::new());
         srec.skip_pdf = true;
-        let mut ri: f64 = 0.0;
-        if rec.front_face {
-            ri = 1.0 / self.refraction_index
+        let ri = if rec.front_face {
+            1.0 / self.refraction_index
         } else {
-            ri = self.refraction_index
-        }
+            self.refraction_index
+        };
         let unit_direction = r_in.direction.unit();
         let cos_theta = unit_direction.neg().dot(&rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0;
-        let mut direction = Vec3::default();
-        if cannot_refract || Self::reflectance(cos_theta, ri) > random_double() {
-            direction = Vec3::reflect(&unit_direction, &rec.normal);
+        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > random_double() {
+            Vec3::reflect(&unit_direction, &rec.normal)
         } else {
-            direction = Vec3::refract(&unit_direction, &rec.normal, ri);
-        }
+            Vec3::refract(&unit_direction, &rec.normal, ri)
+        };
         srec.skip_pdf_ray = Ray::new_time(rec.p, direction, r_in.tm);
         true
     }
@@ -149,16 +143,16 @@ impl DiffuseLight {
             tex: Arc::new(SolidColor::new_color(emit)),
         }
     }
-    pub fn new_tex(tex: impl Texture + 'static) -> Self {
-        Self { tex: Arc::new(tex) }
-    }
+    // pub fn new_tex(tex: impl Texture + 'static) -> Self {
+    //     Self { tex: Arc::new(tex) }
+    // }
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _srec: &mut ScatterRecord) -> bool {
         false
     }
-    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
+    fn emitted(&self, _r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Vec3) -> Color {
         if !rec.front_face {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -176,18 +170,18 @@ impl Isotropic {
             tex: Arc::new(SolidColor::new_color(albedo)),
         }
     }
-    pub fn new_tex(tex: Arc<dyn Texture>) -> Self {
-        Self { tex }
-    }
+    // pub fn new_tex(tex: Arc<dyn Texture>) -> Self {
+    //     Self { tex }
+    // }
 }
 impl Material for Isotropic {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         srec.attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         srec.pdf_ptr = Arc::new(SpherePDF::new());
         srec.skip_pdf = false;
         true
     }
-    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         1.0 / (4.0 * PI)
     }
 }
@@ -254,12 +248,11 @@ impl Material for MappedMaterial {
                 let i = (image_data.image_width as f64 * u) as usize;
                 let j = (image_data.image_height as f64 * v) as usize;
                 let pixel = image_data.pixel_data(i, j);
-                let res = Vec3::new(
+                Vec3::new(
                     (pixel[0] as f64 / 255.99) * 2.0 - 1.0,
                     (pixel[1] as f64 / 255.99) * 2.0 - 1.0,
                     (pixel[2] as f64 / 255.99) * 2.0 - 1.0,
-                );
-                res
+                )
             }
             None => Vec3::new(0.0, 0.0, 0.0),
         }
@@ -272,8 +265,7 @@ impl Material for MappedMaterial {
                 let i = (image_data.image_width as f64 * u) as usize;
                 let j = (image_data.image_height as f64 * v) as usize;
                 let pixel = image_data.pixel_data(i, j);
-                let alpha = pixel[0] as f64 / 255.99;
-                alpha
+                pixel[0] as f64 / 255.99
             }
             None => 1.0,
         }

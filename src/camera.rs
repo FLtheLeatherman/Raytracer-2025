@@ -1,88 +1,44 @@
 use crate::color::{Color, write_color};
 use crate::hittable::{HitRecord, Hittable};
-use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::ScatterRecord;
-use crate::pdf::{CosinePDF, HittablePDF, MixturePDF, PDF};
+use crate::pdf::{HittablePDF, MixturePDF, Pdf};
 use crate::ray::Ray;
-use crate::sphere::Sphere;
-use crate::utility::{INFINITY, PI, degrees_to_radians, random_double, random_double_range};
+use crate::utility::{INFINITY, degrees_to_radians, random_double};
 use crate::vec3::Vec3;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use lazy_static::initialize;
-use rand::random;
 use rayon::prelude::*;
 use std::sync::Arc;
 
+#[derive(Default)]
 pub struct Camera {
-    aspect_ratio: f64,
-    image_width: u32,
+    pub aspect_ratio: f64,
+    pub image_width: u32,
     image_height: u32,
     center: Vec3,
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    samples_per_pixel: u32,
+    pub samples_per_pixel: u32,
     pixel_sample_scale: f64,
-    max_depth: i32,
-    vfov: f64,
-    lookfrom: Vec3,
-    lookat: Vec3,
-    vup: Vec3,
+    pub max_depth: i32,
+    pub vfov: f64,
+    pub lookfrom: Vec3,
+    pub lookat: Vec3,
+    pub vup: Vec3,
     u: Vec3,
     v: Vec3,
     w: Vec3,
-    defocus_angle: f64,
-    focus_dist: f64,
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
-    background: Color,
+    pub background: Color,
     sqrt_spp: u32,
     recip_sqrt_spp: f64,
 }
 
 impl Camera {
-    pub fn new(
-        aspect_ratio: f64,
-        image_width: u32,
-        samples_per_pixel: u32,
-        max_depth: i32,
-        vfov: f64,
-        lookfrom: Vec3,
-        lookat: Vec3,
-        vup: Vec3,
-        defocus_angle: f64,
-        focus_dist: f64,
-        background: Color,
-    ) -> Camera {
-        Camera {
-            aspect_ratio,
-            image_width,
-            image_height: 0,
-            center: Vec3::default(),
-            pixel00_loc: Vec3::default(),
-            pixel_delta_u: Vec3::default(),
-            pixel_delta_v: Vec3::default(),
-            samples_per_pixel,
-            pixel_sample_scale: 1.0 / samples_per_pixel as f64,
-            max_depth,
-            vfov,
-            lookfrom,
-            lookat,
-            vup,
-            u: Vec3::default(),
-            v: Vec3::default(),
-            w: Vec3::default(),
-            defocus_angle,
-            focus_dist,
-            defocus_disk_u: Vec3::default(),
-            defocus_disk_v: Vec3::default(),
-            background,
-            sqrt_spp: 0,
-            recip_sqrt_spp: 0.0,
-        }
-    }
     pub fn initialize(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as u32;
         if self.image_height < 1 {
@@ -110,9 +66,9 @@ impl Camera {
         self.defocus_disk_u = self.u * defocus_radius;
         self.defocus_disk_v = self.v * defocus_radius;
     }
-    fn sample_square() -> Vec3 {
-        Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
-    }
+    // fn sample_square() -> Vec3 {
+    //     Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
+    // }
     fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3 {
         let px = ((s_i as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
         let py = ((s_j as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
@@ -131,12 +87,11 @@ impl Camera {
         let pixel_sample = self.pixel00_loc
             + (self.pixel_delta_u * (i as f64 + offset.x))
             + (self.pixel_delta_v * (j as f64 + offset.y));
-        let mut ray_origin = Vec3::default();
-        if self.defocus_angle <= 0.0 {
-            ray_origin = self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
         } else {
-            ray_origin = self.defocus_disk_sample();
-        }
+            self.defocus_disk_sample()
+        };
         let ray_direction = pixel_sample - ray_origin;
         let ray_time = random_double();
         Ray::new_time(ray_origin, ray_direction, ray_time)

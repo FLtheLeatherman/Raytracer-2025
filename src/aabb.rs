@@ -1,17 +1,16 @@
 use crate::interval::{INTERVAL_EMPTY, INTERVAL_UNIVERSE, Interval};
 use crate::ray::Ray;
 use crate::vec3::Vec3;
-use stb_image::image::load_with_depth;
 use std::ops::Add;
 
 #[derive(Copy, Clone, Default)]
-pub struct AABB {
+pub struct Aabb {
     pub x: Interval,
     pub y: Interval,
     pub z: Interval,
 }
 
-impl AABB {
+impl Aabb {
     fn pad_to_minimums(&mut self) {
         let delta = 0.0001;
         if self.x.size() < delta {
@@ -25,10 +24,10 @@ impl AABB {
         }
     }
     pub fn new(x: &Interval, y: &Interval, z: &Interval) -> Self {
-        let mut _self = AABB {
-            x: (*x).clone(),
-            y: (*y).clone(),
-            z: (*z).clone(),
+        let mut _self = Aabb {
+            x: *x,
+            y: *y,
+            z: *z,
         };
         _self.pad_to_minimums();
         _self
@@ -42,8 +41,8 @@ impl AABB {
         _self.pad_to_minimums();
         _self
     }
-    pub fn new_aabb(box0: &AABB, box1: &AABB) -> Self {
-        AABB {
+    pub fn new_aabb(box0: &Aabb, box1: &Aabb) -> Self {
+        Aabb {
             x: Interval::new_interval(&box0.x, &box1.x),
             y: Interval::new_interval(&box0.y, &box1.y),
             z: Interval::new_interval(&box0.z, &box1.z),
@@ -61,7 +60,7 @@ impl AABB {
     pub fn hit(&self, r: &Ray, ray_t: &Interval) -> bool {
         let ray_orig = r.origin;
         let ray_dir = r.direction;
-        let mut tmp_ray = ray_t.clone();
+        let mut tmp_ray = *ray_t;
         for axis in 0..3 {
             let ax = self.axis_interval(axis);
             let adinv = 1.0 / ray_dir.axis(axis);
@@ -98,20 +97,20 @@ impl AABB {
         }
     }
 }
-impl Add<Vec3> for AABB {
+impl Add<Vec3> for Aabb {
     type Output = Self;
     fn add(self, rhs: Vec3) -> Self::Output {
-        AABB::new(&(self.x + rhs.x), &(self.y + rhs.y), &(self.z + rhs.z))
+        Aabb::new(&(self.x + rhs.x), &(self.y + rhs.y), &(self.z + rhs.z))
     }
 }
-impl Add<AABB> for Vec3 {
-    type Output = AABB;
-    fn add(self, rhs: AABB) -> Self::Output {
+impl Add<Aabb> for Vec3 {
+    type Output = Aabb;
+    fn add(self, rhs: Aabb) -> Self::Output {
         rhs + self
     }
 }
 lazy_static! {
-    pub static ref AABB_EMPTY: AABB = AABB::new(&INTERVAL_EMPTY, &INTERVAL_EMPTY, &INTERVAL_EMPTY);
-    pub static ref AABB_UNIVERSE: AABB =
-        AABB::new(&INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE);
+    pub static ref AABB_EMPTY: Aabb = Aabb::new(&INTERVAL_EMPTY, &INTERVAL_EMPTY, &INTERVAL_EMPTY);
+    pub static ref AABB_UNIVERSE: Aabb =
+        Aabb::new(&INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE, &INTERVAL_UNIVERSE);
 }

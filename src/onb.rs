@@ -1,28 +1,27 @@
 use crate::vec3::Vec3;
 
-pub struct ONB {
+pub struct Onb {
     axis: [Vec3; 3],
 }
 
-impl ONB {
+impl Onb {
     pub fn new(n: &Vec3) -> Self {
         let z = n.unit();
-        let mut a = Vec3::default();
-        if z.x.abs() > 0.9 {
-            a = Vec3::new(0.0, 1.0, 0.0);
+        let a = if z.x.abs() > 0.9 {
+            Vec3::new(0.0, 1.0, 0.0)
         } else {
-            a = Vec3::new(1.0, 0.0, 0.0);
-        }
+            Vec3::new(1.0, 0.0, 0.0)
+        };
         let y = z.cross(&a).unit();
         let x = z.cross(&y);
         Self { axis: [x, y, z] }
     }
-    pub fn u(&self) -> Vec3 {
-        self.axis[0]
-    }
-    pub fn v(&self) -> Vec3 {
-        self.axis[1]
-    }
+    // pub fn u(&self) -> Vec3 {
+    //     self.axis[0]
+    // }
+    // pub fn v(&self) -> Vec3 {
+    //     self.axis[1]
+    // }
     pub fn w(&self) -> Vec3 {
         self.axis[2]
     }

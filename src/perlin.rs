@@ -6,28 +6,26 @@ pub struct Perlin {
     perm_x: [i32; POINT_COUNT],
     perm_y: [i32; POINT_COUNT],
     perm_z: [i32; POINT_COUNT],
-    randfloat: [f64; POINT_COUNT],
+    // randfloat: [f64; POINT_COUNT],
     randvec: [Vec3; POINT_COUNT],
 }
 impl Perlin {
     fn permute(p: &mut [i32; POINT_COUNT]) {
         for i in (0..POINT_COUNT).rev() {
             let target = random_int_range(0, i as i32);
-            let tmp = p[i];
-            p[i] = p[target as usize];
-            p[target as usize] = tmp;
+            p.swap(i, target as usize);
         }
     }
     fn perlin_generate_perm(p: &mut [i32; POINT_COUNT]) {
-        for i in 0..POINT_COUNT {
-            p[i] = i as i32;
+        for (i, item) in p.iter_mut().enumerate().take(POINT_COUNT) {
+            *item = i as i32;
         }
         Self::permute(p);
     }
     pub fn new() -> Self {
         let mut randfloat = [0.0; POINT_COUNT];
-        for i in 0..POINT_COUNT {
-            randfloat[i] = random_double();
+        for item in randfloat.iter_mut().take(POINT_COUNT) {
+            *item = random_double();
         }
         let mut perm_x = [0i32; POINT_COUNT];
         let mut perm_y = [0i32; POINT_COUNT];
@@ -36,14 +34,13 @@ impl Perlin {
         Self::perlin_generate_perm(&mut perm_y);
         Self::perlin_generate_perm(&mut perm_z);
         let mut randvec = [Vec3::default(); POINT_COUNT];
-        for i in 0..POINT_COUNT {
-            randvec[i] = Vec3::random_range(-1.0, 1.0).unit();
+        for item in randvec.iter_mut().take(POINT_COUNT) {
+            *item = Vec3::random_range(-1.0, 1.0).unit();
         }
         Self {
             perm_x,
             perm_y,
             perm_z,
-            randfloat,
             randvec,
         }
     }
@@ -104,10 +101,10 @@ impl Perlin {
         let mut accum = 0.0;
         let mut temp_p = *p;
         let mut weight = 1.0;
-        for i in 0..depth {
+        for _i in 0..depth {
             accum += weight * self.noise(&temp_p);
             weight *= 0.5;
-            temp_p = temp_p.clone() * 2.0;
+            temp_p = temp_p * 2.0;
         }
         accum.abs()
     }
