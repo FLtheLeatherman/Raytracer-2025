@@ -771,7 +771,7 @@ fn final_scene() {
     let mut cam = Camera::default();
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 1600;
-    cam.samples_per_pixel = 10;
+    cam.samples_per_pixel = 5000;
     cam.max_depth = 50;
     cam.vfov = 40.0;
     cam.lookfrom = Vec3::new(278.0, 600.0, -600.0);
@@ -788,7 +788,7 @@ fn final_scene() {
 }
 fn main() {
     let start = Instant::now();
-    let a = 9;
+    let a = 0;
     match a {
         0 => final_scene(),
         1 => obj_test(),
